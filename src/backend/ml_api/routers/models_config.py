@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
+from utils.auth_utils import get_current_user, create_jwt
 # import psutil
-
 from external_models.transformers_model import models, TransformersModel
 
 router = APIRouter()
@@ -16,7 +16,10 @@ MAX_MODELS = 5
 #     return available_memory
 
 @router.post("/")
-async def add_model(config: ModelConfig):
+async def add_model(config: ModelConfig, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Unauthorized: Admin access required")
+
     if len(models) >= MAX_MODELS:
         raise HTTPException(status_code=400, detail="Max model limit reached.")
     # if check_memory() < 1500:
