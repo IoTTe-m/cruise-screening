@@ -85,7 +85,8 @@ STATICFILES_DIRS = [
     STATIC_DIR,
 ]
 
-STATIC_ROOT = env("STATIC_ROOT")
+# STATIC_ROOT = env("STATIC_ROOT")
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
@@ -170,8 +171,8 @@ M1_CHIP = False
 AUTH_USER_MODEL = "users.User"
 
 # if True then also search inside CORE publications aggregator
-SEARCH_WITH_CORE = True
+SEARCH_WITH_CORE = False
 
-ML_API = False
+ML_API = True
 
 ENTREZ_EMAIL = "YOUR_EMAIL@SERVER.COM"

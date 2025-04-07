@@ -483,7 +483,6 @@ def prompt_based_screening(request, review_id):
             ]
             if already_reviewed:
                 continue
-
         start_time = time.time()
         if prediction_result := predict_papers(review, paper):
             inclusion_decisions = {
@@ -519,7 +518,6 @@ def prompt_based_screening(request, review_id):
                 }
             )
             review.save()
-
     return render(
         request=request,
         template_name="literature_review/view_review.html",
