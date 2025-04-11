@@ -18,3 +18,7 @@ requests==2.31.0
 scholarly~=1.7.2
 wikipedia~=1.4.0
 xmltodict~=0.13.0
+langchain~=0.3.23
+langchain-google-genai~=2.1.2
+llama-index~=0.12.28
+llama-index-llms-ollama~=0.5.4
