@@ -79,11 +79,16 @@ def query_text2text_api(query: str) -> Dict[str, Any]:
     headers = {"Content-type": "application/json"}
     try:
         res = requests.post(
-            "http://localhost:5000" + "/question",
-            data=json.dumps({"text": query}),
+            "http://localhost:8000" + "/question",
+            data=json.dumps({"text": query, "model": "google/flan-t5-small"}),
             headers=headers,
         )
-        return res.json()
+        if res.status_code != 200:
+            raise APIException(f"Text-to-text API error: {res.status_code}")
+        response = res.json()
+        response["status"] = "OK"
+        print(response)
+        return response
     except requests.exceptions.ConnectionError:
         return {"status": "error", "reason": "Text-to-text API is not available"}
 
@@ -126,7 +131,7 @@ def prediction_reason(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     return res["response"] if res["status"] == "OK" else None
 
 
-def predict_criterion(paper: Dict[str, Any], criterion: [str, str]) -> Optional[str]:
+def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optional[str]:
     if not settings.ML_API:
         return None
 

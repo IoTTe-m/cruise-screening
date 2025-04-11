@@ -366,13 +366,12 @@ def screen_paper(request, review_id, paper_id):
 def use_classify_api(xy_train: Dict, x_pred: Dict, review_id: int) -> Optional[Dict[str, Any]]:
     if not settings.ML_API:
         return None
-
     headers = {"Content-type": "application/json"}
     try:
         print("xy_train", xy_train)
         print("x_pred", x_pred)
         res = requests.post(
-            "http://localhost:5000" + "/classify",
+            "http://localhost:8000" + "/classify",
             data=json.dumps({"xy_train": xy_train, "x_pred": x_pred, "review_id": review_id}),
             headers=headers,
         )
@@ -420,6 +419,7 @@ def automatic_screening(request, review_id):
                 x_pred[paper["id"]] = {"title": f'{paper["title"]} {paper["abstract"]}'}
 
         if classification_result := use_classify_api(xy_train, x_pred, review_id):
+            print(classification_result)
             algorithm_id = classification_result["algorithm_id"]
             y_pred = classification_result["y_pred"]
         else:
