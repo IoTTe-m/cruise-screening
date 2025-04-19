@@ -1,0 +1,10 @@
+version: "2"
+services:
+  search_app:
+    ports:
+      - "8880:8880"
+  es:
+    volumes:
+      - "/home/jakub/Desktop/SEM1/DevWorkshop/cruise-screening/src/backend/search_app/elasticsearch:/usr/share/elasticsearch/data"
+    ports:
+      - "9200:9200"

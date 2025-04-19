@@ -132,3 +132,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+src/backend/search_app/elasticsearch

@@ -21,6 +21,7 @@ if __name__ == "__main__":
         "--index", type=str, default="papers", help="Name of the ES index."
     )
 
+
     parser.add_argument(
         "--first_n_docs",
         type=int,
@@ -43,8 +44,8 @@ if __name__ == "__main__":
     else:
         total_docs = len(docs_list)
 
-    es = Elasticsearch([{"host": args.host, "port": args.port}])
-
+    es = Elasticsearch([{"host": args.host, "port": args.port, "scheme": "http"}],)
+    es._verified_elasticsearch = True
     if not es.indices.exists(index=args.index):
         mapping = {
             "mappings": {
