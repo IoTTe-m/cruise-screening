@@ -1,8 +1,8 @@
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_elasticsearch import ElasticsearchStore
 from elasticsearch import Elasticsearch
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+# from langchain.document_loaders import TextLoader
+# from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 import getpass
 import os
@@ -34,7 +34,7 @@ for text in retrieved_texts:
     print(text)
 
 PATH = "scripts/data/tmp/dblpv13.jsonl"
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+# splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 
 with open(PATH, "r") as f:
     documents = []
