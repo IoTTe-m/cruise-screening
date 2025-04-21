@@ -18,12 +18,12 @@ embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 
 elastic_vector_search = ElasticsearchStore(
     es_url="http://localhost:9200",
-    # es_connection = es,
     index_name="langchain_index",
     embedding=embeddings,
-    es_user="elastic",
-    es_password="changeme",
+    # es_user="elastic",
+    # es_password="changeme",
 )
+
 
 mytext = "This is a test text to be embedded and stored in Elasticsearch."
 # Store the text in Elasticsearch
@@ -33,7 +33,7 @@ retrieved_texts = elastic_vector_search.similarity_search(mytext)
 for text in retrieved_texts:
     print(text)
 
-PATH = "scripts/data/tmp/dblpv13.jsonl"
+PATH = "scripts/data/tmp/dblpv13_1000.jsonl"
 # splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 
 with open(PATH, "r") as f:

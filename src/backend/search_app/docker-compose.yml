@@ -18,9 +18,11 @@ services:
     container_name: es-cruise-literature
     environment:
       - discovery.type=single-node
-      - xpack_security_enabled=false
+      - network.host=0.0.0.0
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ulimits:
       memlock:
         soft: -1

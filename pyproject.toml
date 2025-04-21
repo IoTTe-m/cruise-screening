@@ -3,7 +3,7 @@ name = "cruise-screening"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = "==3.12"
+requires-python = "==3.12.0"
 dependencies = [
     "bibtexparser==1.4.1",
     "biopython==1.85",
