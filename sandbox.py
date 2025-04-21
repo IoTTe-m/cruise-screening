@@ -71,3 +71,4 @@ dotenv.load_dotenv()
 # # 3. Embed and store
 # embeddings = OpenAIEmbeddings()
 # vector_store = FAISS.from_documents(chunks, embeddings)
+
