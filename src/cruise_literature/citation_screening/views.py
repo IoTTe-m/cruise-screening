@@ -20,6 +20,7 @@ from document_classification.views import (
     predict_relevance,
 )
 from literature_review.models import LiteratureReview
+from ..cruise_rag.views import add_paper_to_elasticsearch_index
 from .models import CitationScreening
 
 
@@ -350,6 +351,13 @@ def screen_paper(request, review_id, paper_id):
         review, request = create_screening_decisions(request, review, paper_id)
         review.save()
 
+        # SCREENING HERE
+        if make_decision(
+            review.papers[paper_id]['decisions']['exclusion_decisions'],
+            review.papers[paper_id]['decisions']['inclusion_decisions'],
+        ):
+            add_paper_to_elasticsearch_index(review_id, paper)
+            
         screening_task = CitationScreening.objects.filter(
             literature_review=review, screening_level=1
         ).first()
@@ -418,6 +426,7 @@ def automatic_screening(request, review_id):
             else:
                 x_pred[paper["id"]] = {"title": f'{paper["title"]} {paper["abstract"]}'}
 
+        
         if classification_result := use_classify_api(xy_train, x_pred, review_id):
             print(classification_result)
             algorithm_id = classification_result["algorithm_id"]
@@ -445,6 +454,13 @@ def automatic_screening(request, review_id):
                         "time": str(datetime.datetime.now()),
                     }
                 )
+                #  SCREENING HERE
+                # todo: verify if this is correct
+                if make_decision(
+                    exclusion_decisions=predicted_label["exclusion_decisions"],
+                    inclusion_decisions=predicted_label["inclusion_decisions"],
+                ):
+                    add_paper_to_elasticsearch_index(review_id, paper)
 
                 review.save()
         return render(
@@ -516,7 +532,16 @@ def prompt_based_screening(request, review_id):
                     "added_at": str(datetime.datetime.now()),
                     "added_by": request.user.username,
                 }
+
             )
+            #  SCREENING HERE
+            if make_decision(
+                exclusion_decisions=exclusion_decisions,
+                inclusion_decisions=inclusion_decisions,
+            ):
+                review.papers[paper_id]["screened"] = True
+            add_paper_to_elasticsearch_index(review_id, paper)
+
             review.save()
     return render(
         request=request,
