@@ -5,12 +5,13 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: example
-      PGDATA: /var/lib/postgresql/data/pgdata
+      - POSTGRES_DB=cruise_literature
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
 volumes:
-  pgdata:
+  db_data:

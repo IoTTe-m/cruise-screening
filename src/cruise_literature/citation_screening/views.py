@@ -20,7 +20,7 @@ from document_classification.views import (
     predict_relevance,
 )
 from literature_review.models import LiteratureReview
-from ..cruise_rag.views import add_paper_to_elasticsearch_index
+from cruise_rag.views import add_paper_to_elasticsearch_index
 from .models import CitationScreening
 
 
@@ -357,7 +357,7 @@ def screen_paper(request, review_id, paper_id):
             review.papers[paper_id]['decisions']['inclusion_decisions'],
         ):
             add_paper_to_elasticsearch_index(review_id, paper)
-            
+
         screening_task = CitationScreening.objects.filter(
             literature_review=review, screening_level=1
         ).first()

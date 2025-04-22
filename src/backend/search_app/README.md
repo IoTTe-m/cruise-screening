@@ -26,7 +26,7 @@ services:
 The first time, you need to build the images using:
 
 ```bash
-$ docker-compose -f docker-compose.yml -f docker-compose-local.yml  build
+$ 
 ```
 By typing `-f docker-compose.yml` and then `-f docker-compose-local.yml` the data from the local file overwrites the default.
 
@@ -73,3 +73,4 @@ The API accepts the following requests:
     }
 }
 ```
+docker-compose -f docker-compose.yml -f docker-compose-local.yml  build
