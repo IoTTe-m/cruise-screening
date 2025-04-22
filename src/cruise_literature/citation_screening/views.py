@@ -535,12 +535,13 @@ def prompt_based_screening(request, review_id):
 
             )
             #  SCREENING HERE
+            print("inclusion_decisions", inclusion_decisions)
             if make_decision(
-                exclusion_decisions=exclusion_decisions,
-                inclusion_decisions=inclusion_decisions,
+                exclusions=exclusion_decisions,
+                inclusions=inclusion_decisions,
             ):
-                review.papers[paper_id]["screened"] = True
-            add_paper_to_elasticsearch_index(review_id, paper)
+                add_paper_to_elasticsearch_index(review_id, paper)
+            review.papers[paper_id]["screened"] = True
 
             review.save()
     return render(
