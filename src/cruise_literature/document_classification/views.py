@@ -80,7 +80,8 @@ def query_text2text_api(query: str) -> Dict[str, Any]:
     try:
         res = requests.post(
             "http://localhost:8000" + "/question",
-            data=json.dumps({"text": query, "model": "google/flan-t5-small"}),
+            # data=json.dumps({"text": query, "model": "google/flan-t5-small"}),
+            data=json.dumps({"text": query, "model": "llama3/llama-3-8b"}),
             headers=headers,
         )
         if res.status_code != 200:
@@ -156,7 +157,8 @@ def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optio
     Paper Authors: {paper['authors']}
     
     Systematic review criterion: {criterion['text']}
-    Please answer with either "yes", "no" or "not sure".
+    Please answer with either "yes", "no" or "not sure". Do NOT write anything except for one of the three options.
+    Select: "yes", "no" or "not sure".
     """
 
     res = query_text2text_api(prompt)
@@ -183,13 +185,10 @@ def predict_relevance(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     
     Systematic review search queries: {', '.join(review.search_queries)}
 
-    Please answer with either "Highly relevant", "Somewhat relevant" or "Not relevant".
+    Please answer with either "Highly relevant", "Somewhat relevant" or "Not relevant". Do NOT write anything except for one of the three options.
+    Select: "Highly relevant", "Somewhat relevant" or "Not relevant".
     """
 
-    print(prompt)
-
     res = query_text2text_api(prompt)
-
-    print(res)
 
     return res["response"] if res["status"] == "OK" else None

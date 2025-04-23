@@ -1,8 +1,17 @@
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from ollama import chat
 from utils.device import get_device
 import logging
+from abc import ABC, abstractmethod
 
-class TransformersModel:
+
+class LanguageModel(ABC):
+    @abstractmethod
+    def generate_response(self, text: str, max_length=32, num_beams=4) -> str:
+        pass
+
+
+class TransformersModel(LanguageModel):
     def __init__(self, model_name: str):
         self.device = get_device()
         logging.info("Loading model and tokenizer...")
@@ -19,9 +28,28 @@ class TransformersModel:
         outputs = self.model.generate(inputs, max_length=max_length, num_beams=num_beams, early_stopping=True)
         response = self.tokenizer.decode(outputs[0].to("cpu"))
         return response.replace("<pad>", "").replace("<s>", "").replace("</s>", "").strip()
+    
+
+class OllamaModel(LanguageModel):
+    def __init__(self, model_name: str):
+        self.model_name = model_name
+
+    def generate_response(self, text: str, max_length=32, num_beams=4):
+        response = chat(model=self.model_name, messages=[{
+                'role': 'user',
+                'content': text,
+            },
+        ], options={
+            'max_tokens': max_length,
+            'num_beams': num_beams,
+        })
+        return response['message']['content']
+
 
 models = {
-    "bigscience/T0_3B" : TransformersModel("bigscience/T0_3B"),
-    "google/flan-t5-small" : TransformersModel("google/flan-t5-small"),
-    "geektech/flan-t5-base-gpt4-relation" : TransformersModel("geektech/flan-t5-base-gpt4-relation"),
+    # "bigscience/T0_3B" : TransformersModel("bigscience/T0_3B"),
+    # "google/flan-t5-small" : TransformersModel("google/flan-t5-small"),
+    # "geektech/flan-t5-base-gpt4-relation" : TransformersModel("geektech/flan-t5-base-gpt4-relation"),
+    "llama3/llama-3-8b" : OllamaModel("llama3:8b"),
 }
+
