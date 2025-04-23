@@ -1,11 +1,10 @@
-
 # Create your views here.
 from langchain_elasticsearch import ElasticsearchStore
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
 from django.core.files.temp import NamedTemporaryFile
-import requests
+import requests, os
 from sympy import content
 
 
@@ -30,8 +29,8 @@ def get_id_for_a_page(paper_page):
 def download_pdf(pdf_url):
     print(f"Downloading PDF from {pdf_url}")
     try:
-        temp_file = NamedTemporaryFile(delete=True)
-        response = requests.get(pdf_url)
+        temp_file = NamedTemporaryFile()
+        response = requests.get(pdf_url, verify=False)
         if response.status_code == 200:
             temp_file.write(response.content)
             temp_file.flush()
@@ -70,8 +69,6 @@ def add_paper_to_elasticsearch_index(review_id, paper):
                 # Load the PDF and extract text
                 pdf_loader = PyPDFLoader(temp_pdf_file.name)
                 paper_pages = pdf_loader.load_and_split()
-
-                temp_pdf_file.close()
 
                 for paper_page in paper_pages:
                     paper_page.metadata['title'] = paper['title']
@@ -121,10 +118,13 @@ def add_paper_to_elasticsearch_index(review_id, paper):
         index_name=index_name,
         embedding=embeddings,
     )
-    elastic_vector_search.add_documents(paper_pages, ids=ids)
+    elastic_vector_search.add_documents(
+        paper_pages,
+        ids=ids
+    )
 
 def remove_paper_from_elasticsearch_index(review_id, paper):
-    print(f"Removing paper from Elasticsearch index for RAG...")
+    print("Removing paper from Elasticsearch index for RAG...")
     index_name = review_id_to_index(review_id)
     elastic_vector_search = ElasticsearchStore(
         es_url="http://localhost:9200",
@@ -132,7 +132,34 @@ def remove_paper_from_elasticsearch_index(review_id, paper):
         embedding=embeddings,
     )
 
+    page_number = -1
+    
+    first_page_id = get_id_for_a_page_by_metadata(
+        paper['title'],
+        page_number,
+        paper['doi'],
+    )
 
+    try:
+        print(f"Removing page {page_number} with id {first_page_id} from index {index_name}")
+        elastic_vector_search.delete(
+            ids=[first_page_id]
+        )
+    except Exception:
+        pass
 
-    # for page_number in range(-1, -2):
-    #     page_id = get_id_for_a_page(
+    while True:
+        page_number += 1
+        page_id = get_id_for_a_page_by_metadata(
+            paper['title'],
+            page_number,
+            paper['doi'],
+        )
+        try:
+            if not elastic_vector_search.delete(
+                    ids=[page_id]
+                ):
+                break
+        except Exception:
+            break
+    print(f"Finished removing pages from index {index_name}")

@@ -98,14 +98,19 @@ def predict_papers(review: LiteratureReview, paper: Dict[str, Any]) -> Optional[
         return None
 
     prompt = f"""
+    You are a research assistant. You are given a paper and a systematic review.
+    Your task is to determine whether the paper is relevant to the review.
     Is the following paper relevant to the review?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
+    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Review: {review.title}
     Review abstract: {review.description}
     Please answer with either "yes", "no" or "not sure".
+    Do NOT write anything except for one of the three options.
+    Select: "yes", "no" or "not sure".
     """
     res = query_text2text_api(prompt)
 
@@ -117,9 +122,12 @@ def prediction_reason(review: LiteratureReview, paper: Dict[str, Any]) -> Option
         return None
 
     prompt = f"""
+    You are a research assistant. You are given a paper and a systematic review.
+    Your task is to determine whether the paper is relevant to the review.
     Why is the following paper relevant to the review?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
+    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Review: {review.title}
@@ -136,14 +144,21 @@ def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optio
         return None
 
     prompt = f"""
+    You are a research assistant. You are given a paper and a systematic review criterion.
+    Your task is to determine whether the paper is relevant to the criterion described below.
+    If you think the paper is relevant to the criterion, please answer with "yes".
+    If you are sure that the paper is not relevant to the criterion, please answer with "no".
+    Otherwise, please answer with "not sure".
     Is the following paper relevant to the criterion?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
+    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
-    Criterion: {criterion['text']}
+    Systematic review criterion: {criterion['text']}
     Please answer with either "yes", "no" or "not sure".
     """
+
     res = query_text2text_api(prompt)
 
     return res["response"] if res["status"] == "OK" else None
@@ -154,15 +169,27 @@ def predict_relevance(review: LiteratureReview, paper: Dict[str, Any]) -> Option
         return None
 
     prompt = f"""
+    You are a research assistant. You are given a paper and a systematic review search query.
+    Your task is to determine whether the paper is relevant to the query.
+    If you think the paper is relevant to the query, please answer with "Highly relevant".
+    If you are sure that the paper is not relevant to the query, please answer with "Not relevant".
+    Otherwise, please answer with "Somewhat relevant".
+    Sometimes, one or more of the elements of the paper description are not available. In this case, you should answer by analysing the rest of the provided data.
     Is the following paper relevant to the queries?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
+    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
-    Review search queries: {', '.join(review.search_queries)}
+    Systematic review search queries: {', '.join(review.search_queries)}
 
     Please answer with either "Highly relevant", "Somewhat relevant" or "Not relevant".
     """
+
+    print(prompt)
+
     res = query_text2text_api(prompt)
+
+    print(res)
 
     return res["response"] if res["status"] == "OK" else None
