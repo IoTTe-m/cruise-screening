@@ -3,10 +3,14 @@ from langchain_elasticsearch import ElasticsearchStore
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain.tools import tool
+from langchain.chains import RetrievalQA
+from langchain.agents import initialize_agent, AgentType
 from django.core.files.temp import NamedTemporaryFile
+from django.contrib.auth.decorators import login_required
+from models import LLMConversation
 import requests, os
-from sympy import content
-
 
 # Initialize Elasticsearch and embeddings
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
@@ -50,8 +54,8 @@ def add_paper_to_elasticsearch_index(review_id, paper):
     """
     print("Adding paper to Elasticsearch index for RAG...")
     # print(f"Paper: {paper}")
-    print(f"PDF: {paper['pdf'] if 'pdf' in paper else 'No PDF'}")
-    print(f"Review ID: {review_id}")
+    print(f"PDF: {paper.get('pdf', 'No PDF')}")
+    # print(f"Review ID: {review_id}")
     print()
     # we only care about documents with pdf
     # we download the pdf
@@ -163,3 +167,85 @@ def remove_paper_from_elasticsearch_index(review_id, paper):
         except Exception:
             break
     print(f"Finished removing pages from index {index_name}")
+
+@login_required
+def ask_agent(screening: int, conversation_id: int, question: str):
+    """
+    Function to ask the agent a question.
+    Args:
+        screening (int): The screening ID associated with the conversation.
+        conversation_id (int): The unique identifier for the conversation.
+        question (str): Question to ask the agent
+    Returns:
+        str: Answer from the agent
+    """
+
+    try:
+        conversation = LLMConversation.objects.get(
+            screening=screening,
+            conversation_id=conversation_id
+        )
+    except LLMConversation.DoesNotExist:
+        raise ValueError("Conversation not found")
+    except LLMConversation.MultipleObjectsReturned:
+        raise ValueError("Multiple conversations found")
+    
+    history = conversation.conversation
+    
+    query = [("system", "TODO")] + \
+        [(item.get("role"), item.get("content")) for item in history] + \
+        [("human", question)]
+
+    elastic_vector_search = ElasticsearchStore(
+        es_url="http://localhost:9200",
+        index_name="langchain_index",
+        embedding=embeddings,
+        # es_user="elastic",
+        # es_password="changeme",
+    )
+
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.0-flash-001",
+        temperature=0,
+        max_tokens=None,
+        timeout=None,
+        max_retries=1,
+    )
+
+    rag_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff",
+        retriever=elastic_vector_search.as_retriever(search_kwargs={"k": 3})
+    )
+
+    @tool
+    def rag_tool(query: str) -> str:
+        """Use this tool to get information from the RAG model if needed."""
+        return rag_chain.invoke(query)
+    
+    tools = [rag_tool]
+
+    agent = initialize_agent(
+        tools=tools,
+        llm=llm,
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        max_iterations=5,
+        early_stopping_method="generate",
+        verbose=True,
+    )
+
+    result = agent.invoke(query)
+
+    conversation.conversation.extend(
+        [
+            {
+                "role": "human",
+                "content": question,
+            },
+            {
+                "role": "ai",
+                "content": result,
+            }
+        ]
+    )
+
+    conversation.save()
+    return result['output']
