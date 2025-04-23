@@ -6,6 +6,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
 from django.core.files.temp import NamedTemporaryFile
 import requests
+from sympy import content
 
 
 # Initialize Elasticsearch and embeddings
@@ -14,6 +15,16 @@ embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 
 def review_id_to_index(review_id):
     return f'review_{review_id}_index'
+
+def get_id_for_a_page_by_metadata(title, page, doi):
+    return f"{title}_{page}_{doi}"
+
+def get_id_for_a_page(paper_page):
+    return get_id_for_a_page_by_metadata(
+        paper_page.metadata['title'],
+        paper_page.metadata['page'],
+        paper_page.metadata['doi'],
+    )
 
 
 def download_pdf(pdf_url):
@@ -51,40 +62,58 @@ def add_paper_to_elasticsearch_index(review_id, paper):
 
     paper_pages = []
 
-    if 'pdf' in paper and paper['pdf']:
-        pdf_url = paper['pdf']
-        temp_pdf_file = download_pdf(pdf_url)
-        if temp_pdf_file:
-            # Load the PDF and extract text
-            pdf_loader = PyPDFLoader(temp_pdf_file.name)
-            paper_pages = pdf_loader.load_and_split()
+    try:
+        if 'pdf' in paper and paper['pdf']:
+            pdf_url = paper['pdf']
+            temp_pdf_file = download_pdf(pdf_url)
+            if temp_pdf_file:
+                # Load the PDF and extract text
+                pdf_loader = PyPDFLoader(temp_pdf_file.name)
+                paper_pages = pdf_loader.load_and_split()
 
-            temp_pdf_file.close()
+                temp_pdf_file.close()
 
-            for paper_page in paper_pages:
-                paper_page.metadata['title'] = paper['title']
-                paper_page.metadata['authors'] = paper['authors']
-                paper_page.metadata['doi'] = paper['doi']
-                paper_page.metadata['abstract'] = paper['abstract']
+                for paper_page in paper_pages:
+                    paper_page.metadata['title'] = paper['title']
+                    paper_page.metadata['authors'] = paper['authors']
+                    paper_page.metadata['doi'] = paper['doi']
+                    paper_page.metadata['abstract'] = paper['abstract']
 
-            print(f"Loaded {len(paper_pages)} pages from PDF.")
-        else:
-            print("No PDF file found or failed to download.")
-    else:
+                print(f"Loaded {len(paper_pages)} pages from PDF.")
+            else:
+                print("No PDF file found or failed to download.")
+    except Exception as e:
+        print(f"Error loading PDF: {e}")
+
+    print(paper)
+    
+    if len(paper_pages) == 0:
         print("No PDF file found, using abstract instead.")
-        print(paper)
+
+        content = paper['abstract'] if 'abstract' in paper else None
+        
+        if not content:
+            print("No abstract found.")
+            content = paper['snippet'] if 'snippet' in paper else None
+
+        if not content:
+            print("No snippet found, stop.")
+            return
+
         paper_pages = [
             Document(
-                page_content=paper['abstract'],
+                page_content=content,
                 metadata={
-                    'title': paper['title'],
-                    'authors': paper['authors'],
-                    'doi': paper['doi'],
-                    'abstract': paper['abstract'],
+                    'title': paper['title'] if 'title' in paper else "",
+                    'authors': paper['authors'] if 'authors' in paper else "",
+                    'doi': paper['doi'] if 'doi' in paper else "",
+                    'abstract': content,
                     'page': -1,
                 }
             )
         ]
+
+    ids = [get_id_for_a_page(paper_page) for paper_page in paper_pages]
 
     index_name = review_id_to_index(review_id)
     elastic_vector_search = ElasticsearchStore(
@@ -92,7 +121,18 @@ def add_paper_to_elasticsearch_index(review_id, paper):
         index_name=index_name,
         embedding=embeddings,
     )
-    elastic_vector_search.add_documents(paper_pages)
+    elastic_vector_search.add_documents(paper_pages, ids=ids)
 
 def remove_paper_from_elasticsearch_index(review_id, paper):
-    pass
+    print(f"Removing paper from Elasticsearch index for RAG...")
+    index_name = review_id_to_index(review_id)
+    elastic_vector_search = ElasticsearchStore(
+        es_url="http://localhost:9200",
+        index_name=index_name,
+        embedding=embeddings,
+    )
+
+
+
+    # for page_number in range(-1, -2):
+    #     page_id = get_id_for_a_page(
