@@ -20,7 +20,7 @@ from document_classification.views import (
     predict_relevance,
 )
 from literature_review.models import LiteratureReview
-from cruise_rag.views import add_paper_to_elasticsearch_index
+from cruise_rag.views import add_paper_to_elasticsearch_index, remove_paper_from_elasticsearch_index
 from .models import CitationScreening
 
 
@@ -351,12 +351,16 @@ def screen_paper(request, review_id, paper_id):
         review, request = create_screening_decisions(request, review, paper_id)
         review.save()
 
+        paper = review.papers[paper_id]
+
         # SCREENING HERE
         if make_decision(
-            review.papers[paper_id]['decisions']['exclusion_decisions'],
-            review.papers[paper_id]['decisions']['inclusion_decisions'],
+            paper['decisions']['exclusion_decisions'],
+            paper['decisions']['inclusion_decisions'],
         ):
             add_paper_to_elasticsearch_index(review_id, paper)
+        else:
+            remove_paper_from_elasticsearch_index(review_id, paper)
 
         screening_task = CitationScreening.objects.filter(
             literature_review=review, screening_level=1
@@ -461,6 +465,8 @@ def automatic_screening(request, review_id):
                     inclusion_decisions=predicted_label["inclusion_decisions"],
                 ):
                     add_paper_to_elasticsearch_index(review_id, paper)
+                else:
+                    remove_paper_from_elasticsearch_index(review_id, paper)
 
                 review.save()
         return render(
@@ -541,6 +547,8 @@ def prompt_based_screening(request, review_id):
                 inclusions=inclusion_decisions,
             ):
                 add_paper_to_elasticsearch_index(review_id, paper)
+            else:
+                remove_paper_from_elasticsearch_index(review_id, paper)
             review.papers[paper_id]["screened"] = True
 
             review.save()
