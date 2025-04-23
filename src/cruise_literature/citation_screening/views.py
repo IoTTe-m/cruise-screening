@@ -40,9 +40,10 @@ def _distribute_papers_for_reviewers(
     :return: dict with tasks for each member
     """
     if len(members) < min_decisions:
-        raise ValueError(
-            "Number of members should be greater or equal to annotations_per_paper"
-        )
+        min_decisions = len(members)
+        # raise ValueError(
+            # "Number of members should be greater or equal to annotations_per_paper"
+        # )
     if not members:
         raise ValueError("Number of members should be greater than 0")
 
@@ -137,10 +138,10 @@ def distribute_papers(request, review_id):
             return redirect("literature_review:review_details", review_id=review.id)
 
 
-def make_decision(exclusions, inclusions):
-    if "yes" in exclusions:
+def make_decision(exclusions: dict, inclusions: dict) -> bool:
+    if "yes" in exclusions.values():
         return False
-    if "no" in inclusions:
+    if "no" in inclusions.values():
         return False
 
     return True
@@ -508,13 +509,13 @@ def prompt_based_screening(request, review_id):
         start_time = time.time()
         if prediction_result := predict_papers(review, paper):
             inclusion_decisions = {
-                criterion["id"]: predict_criterion(paper, criterion).lower()
+                criterion["id"]: predict_criterion(paper, criterion).lower().strip()
                 for criterion in review.criteria["inclusion"]
                 if criterion["is_active"]
             }
 
             exclusion_decisions = {
-                criterion["id"]: predict_criterion(paper, criterion).lower()
+                criterion["id"]: predict_criterion(paper, criterion).lower().strip()
                 for criterion in review.criteria["exclusion"]
                 if criterion["is_active"]
             }
@@ -541,11 +542,11 @@ def prompt_based_screening(request, review_id):
 
             )
             #  SCREENING HERE
-            print("inclusion_decisions", inclusion_decisions)
             if make_decision(
                 exclusions=exclusion_decisions,
                 inclusions=inclusion_decisions,
             ):
+            
                 add_paper_to_elasticsearch_index(review_id, paper)
             else:
                 remove_paper_from_elasticsearch_index(review_id, paper)
@@ -557,3 +558,4 @@ def prompt_based_screening(request, review_id):
         template_name="literature_review/view_review.html",
         context={"review": review},
     )
+

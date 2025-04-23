@@ -1,5 +1,5 @@
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-from ollama import chat
+from ollama import chat, pull
 from utils.device import get_device
 import logging
 from abc import ABC, abstractmethod
@@ -33,6 +33,9 @@ class TransformersModel(LanguageModel):
 class OllamaModel(LanguageModel):
     def __init__(self, model_name: str):
         self.model_name = model_name
+        print(f"Pulling model {model_name}...")
+        pull(model_name)
+        logging.info("Ollama model pulled")
 
     def generate_response(self, text: str, max_length=32, num_beams=4):
         response = chat(model=self.model_name, messages=[{
@@ -51,5 +54,6 @@ models = {
     # "google/flan-t5-small" : TransformersModel("google/flan-t5-small"),
     # "geektech/flan-t5-base-gpt4-relation" : TransformersModel("geektech/flan-t5-base-gpt4-relation"),
     "llama3/llama-3-8b" : OllamaModel("llama3:8b"),
+    "gemma3:1b" : OllamaModel("gemma3:1b"),
 }
 
