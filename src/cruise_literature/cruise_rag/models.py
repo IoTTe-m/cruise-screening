@@ -25,6 +25,6 @@ class LLMConversation(models.Model):
     """
 
     screening = models.IntegerField()
-    conversation_id = models.IntegerField()
+    conversation_id = models.AutoField(primary_key=True)
     conversation = models.JSONField()
     

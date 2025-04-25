@@ -169,8 +169,27 @@ def remove_paper_from_elasticsearch_index(review_id, paper):
             break
     print(f"Finished removing pages from index {index_name}")
 
-# @login_required
-def ask_agent(request, screening: int, conversation_id: int):
+
+@login_required
+def add_conversation(request, screening_id: int):
+    """
+    Function to add a conversation to the database.
+    Args:
+        screening (int): The screening ID associated with the conversation.
+    Returns:
+        str: Conversation ID
+    """
+    
+    if request.method != 'POST':
+        return JsonResponse(
+            {"error": "Method not allowed"}, status=405
+        )
+    
+    
+
+
+@login_required
+def ask_agent(request, screening_id: int, conversation_id: int):
     """
     Function to ask the agent a question.
     Args:
@@ -187,35 +206,53 @@ def ask_agent(request, screening: int, conversation_id: int):
 
     print("Asking agent...")
 
-    print(request)
-
     if request.method != 'POST':
         return JsonResponse(
             {"error": "Method not allowed"}, status=405
         )
     
-    print("Method ok")
-    
+    print("Correct method")
+
     try:
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
     except json.JSONDecodeError:
-        return "Invalid JSON", 400
+        return JsonResponse(
+            {"error": "Invalid JSON"}, status=400
+        )
+    
+    print("JSON decoded")
     
     if "question" not in body:
-        return "Question not found", 400
+        return JsonResponse(
+            {"error": "Missing question"}, status=400
+        )
     
-    question = body.get("question")
+    question = body.get("question", None)
+
+    if not question:
+        return JsonResponse(
+            {"error": "Empty question"}, status=400
+        )
+
+    print(f"Question received: {question}")
 
     try:
         conversation = LLMConversation.objects.get(
-            screening=screening,
+            screening=screening_id,
             conversation_id=conversation_id
         )
     except LLMConversation.DoesNotExist:
-        raise ValueError("Conversation not found")
+        return JsonResponse(
+            {
+                "error": "Conversation not found",
+            },
+            status=404,
+        )
     except LLMConversation.MultipleObjectsReturned:
         raise ValueError("Multiple conversations found")
+    
+    print("Conversation found")
     
     history = conversation.conversation
 
