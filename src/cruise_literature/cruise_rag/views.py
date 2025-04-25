@@ -7,9 +7,15 @@ from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmb
 from langchain.tools import tool
 from langchain.chains import RetrievalQA
 from langchain.agents import initialize_agent, AgentType
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain.agents import AgentExecutor, create_tool_calling_agent, tool
+from langchain_core.prompts import ChatPromptTemplate
+
 from django.core.files.temp import NamedTemporaryFile
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
+
+from literature_review.models import LiteratureReview
 from .models import LLMConversation
 import requests, os, json
 
@@ -170,7 +176,130 @@ def remove_paper_from_elasticsearch_index(review_id, paper):
     print(f"Finished removing pages from index {index_name}")
 
 
+def clear_conversation(request, conversation_id: int):
+    """
+    Function to clear the conversation history.
+    Args:
+        screening (int): The screening ID associated with the conversation.
+        conversation_id (int): The unique identifier for the conversation.
+    Returns:
+        str: Success message
+    """
+    
+    if request.method != 'PATCH':
+        return JsonResponse(
+            {"error": "Method not allowed"}, status=405
+        )
+    
+    try:
+        conversation = LLMConversation.objects.get(
+            conversation_id=conversation_id
+        )
+    except LLMConversation.DoesNotExist:
+        return JsonResponse(
+            {
+                "error": "Conversation not found",
+            },
+            status=404,
+        )
+    
+    conversation.conversation = []
+    conversation.save()
+
+    return JsonResponse({
+        "message": "Conversation cleared",
+    })
+
+
+def delete_conversation(request, conversation_id: int):
+    """
+    Function to delete the conversation.
+    Args:
+        screening (int): The screening ID associated with the conversation.
+        conversation_id (int): The unique identifier for the conversation.
+    Returns:
+        str: Success message
+    """
+    
+    if request.method != 'DELETE':
+        return JsonResponse(
+            {"error": "Method not allowed"}, status=405
+        )
+    
+    try:
+        conversation = LLMConversation.objects.get(
+            conversation_id=conversation_id
+        )
+    except LLMConversation.DoesNotExist:
+        return JsonResponse(
+            {
+                "error": "Conversation not found",
+            },
+            status=404,
+        )
+    
+    conversation.delete()
+
+    return JsonResponse({
+        "message": "Conversation deleted",
+    })
+
+
 @login_required
+def handle_conversation(request, conversation_id: int):
+    """
+    Function to handle the conversation.
+    Args:
+        screening (int): The screening ID associated with the conversation.
+        conversation_id (int): The unique identifier for the conversation.
+    Returns:
+        str: Conversation history
+    """
+    
+    if request.method == 'PATCH':
+        return clear_conversation(request, conversation_id)
+    elif request.method == 'DELETE':
+        return delete_conversation(request, conversation_id)
+    else:
+        return JsonResponse(
+            {"error": "Method not allowed"}, status=405
+        )
+
+
+def get_conversation_ids(request, screening_id: int):
+    """
+    Function to get the conversation IDs.
+    Args:
+        screening (int): The screening ID associated with the conversation.
+    Returns:
+        str: Conversation IDs
+    """
+    
+    if request.method != 'GET':
+        return JsonResponse(
+            {"error": "Method not allowed"}, status=405
+        )
+    
+    review = LiteratureReview.objects.get(id=screening_id)
+    if not review:
+        return JsonResponse(
+            {"error": "Screening not found"}, status=404
+        )
+    
+    if request.user not in review.members.all():
+        return JsonResponse(
+            {"error": "User not in review"}, status=403
+        )
+    
+    conversations = LLMConversation.objects.filter(
+        screening_id=review
+    ).values_list('conversation_id', flat=True)
+
+    return JsonResponse({
+        "conversation_ids": list(conversations),
+    })
+    
+
 def add_conversation(request, screening_id: int):
     """
     Function to add a conversation to the database.
@@ -185,11 +314,50 @@ def add_conversation(request, screening_id: int):
             {"error": "Method not allowed"}, status=405
         )
     
+    review = LiteratureReview.objects.get(id=screening_id)
+    if not review:
+        return JsonResponse(
+            {"error": "Screening not found"}, status=404
+        )
     
+    if request.user not in review.members.all():
+        return JsonResponse(
+            {"error": "User not in review"}, status=403
+        )
+    
+    new_conversation = LLMConversation.objects.create(
+           screening_id=review
+    )
+
+    print(new_conversation)
+
+    return JsonResponse({
+        "conversation_id": new_conversation.conversation_id,
+    })
 
 
 @login_required
-def ask_agent(request, screening_id: int, conversation_id: int):
+def manage_conversations(request, screening_id: int):
+    """
+    Function to manage the conversation.
+    Args:
+        screening (int): The screening ID associated with the conversation.
+    Returns:
+        str: Conversation ID
+    """
+    
+    if request.method == 'POST':
+        return add_conversation(request, screening_id)
+    elif request.method == 'GET':
+        return get_conversation_ids(request, screening_id)
+    else:
+        return JsonResponse(
+            {"error": "Method not allowed"}, status=405
+        )
+
+
+@login_required
+def ask_agent(request, conversation_id: int):
     """
     Function to ask the agent a question.
     Args:
@@ -239,7 +407,6 @@ def ask_agent(request, screening_id: int, conversation_id: int):
 
     try:
         conversation = LLMConversation.objects.get(
-            screening=screening_id,
             conversation_id=conversation_id
         )
     except LLMConversation.DoesNotExist:
@@ -258,21 +425,39 @@ def ask_agent(request, screening_id: int, conversation_id: int):
 
     system_prompt = '''
     You are a helpful reasearch assistant. Your task is to help the user with their research concerning systematic review.
-    The use have selected a set of research papers and you have access to them.
+    The user have selected a set of research papers and you have access to them.
     You are given access to a database of research papers and a RAG system that can help you access the information about the selected papers.
     When you are asked a question, you should first check if the answer is in the database if this is a question that can be answered by the analysis of the papers.
     Every citation should be in the form of [1] or [2] or [3] etc. depending on the number of citations.
     At the end of the answer, you should provide a list of references in the form of [1] Paper title, authors, doi, page number, each one in a new line.
-    If the question is not related to the papers, you should answer it as a normal assistant.
+    If the question is not related to the papers, inform the user that the question is not related to the papers and you cannot help them with that.
+    If you are unsure whether it is related to the papers, you should assume that it is.
+    You should use tools rather too much than too little. You should try your best to answer the question using the tools.
+    You can use the tools as many times as you want.
+    You should always conform to the format required by the tools' input.
     '''
-    
-    query = [("system", system_prompt)] + \
-        [(item.get("role"), item.get("content")) for item in history] + \
-        [("human", question)]
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("placeholder", "{chat_history}"),
+        ("human", "{input}"),
+        ("placeholder", "{agent_scratchpad}"),
+    ])
+
+    chat_history = [
+        (item.get("role"), item.get("content"))
+        for item in history
+    ]
+
+    review_id = conversation.screening_id.pk
+    index_name = review_id_to_index(review_id)
+
+    print(f"Id: {review_id}")
+    print(f"Index name: {index_name}")
 
     elastic_vector_search = ElasticsearchStore(
         es_url="http://localhost:9200",
-        index_name="langchain_index",
+        index_name=index_name,
         embedding=embeddings,
         # es_user="elastic",
         # es_password="changeme",
@@ -295,6 +480,9 @@ def ask_agent(request, screening_id: int, conversation_id: int):
         """Use this tool to get information from the RAG model if needed.
         This tool allows you to ask questions about the papers selected by the user.
         This tool should return the answer with all the necessary citations.
+        Sometimes the tool will not be able to answer the question, in that case, you should try to formulate the question in a different way.
+        Most often than not, the problem with this tool's answer will be in your question formulation, so you should try to rephrase it them
+        as this tool will try to answer your question very literally.
         """
         return rag_chain.invoke(query)
     
@@ -319,25 +507,23 @@ def ask_agent(request, screening_id: int, conversation_id: int):
     
     tools = [rag_tool, elastic_search_tool]
 
-    agent = initialize_agent(
-        tools=tools,
-        llm=llm,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        max_iterations=7,
-        early_stopping_method="generate",
-        verbose=True,
-    )
+    agent = create_tool_calling_agent(llm, tools, prompt)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, max_iterations=15)
+    result = agent_executor.invoke({
+        "input": question,
+        "chat_history": chat_history
+    })['output']
 
-    result = agent.invoke(query)
+    print(f"Result: {result}")
 
     conversation.conversation.extend(
         [
             {
-                "role": "human",
+                "role": "user",
                 "content": question,
             },
             {
-                "role": "ai",
+                "role": "assistant",
                 "content": result,
             }
         ]

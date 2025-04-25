@@ -1,4 +1,5 @@
 from django.db import models
+from literature_review.models import LiteratureReview
 
 # Create your models here.
 # OK!
@@ -24,7 +25,10 @@ class LLMConversation(models.Model):
             ]
     """
 
-    screening = models.IntegerField()
+    screening_id = models.ForeignKey(
+        LiteratureReview,
+        on_delete=models.CASCADE,
+    )
     conversation_id = models.AutoField(primary_key=True)
-    conversation = models.JSONField()
+    conversation = models.JSONField(default=list, blank=True)
     
