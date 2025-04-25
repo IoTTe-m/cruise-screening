@@ -53,7 +53,8 @@ models = {
     # "bigscience/T0_3B" : TransformersModel("bigscience/T0_3B"),
     # "google/flan-t5-small" : TransformersModel("google/flan-t5-small"),
     # "geektech/flan-t5-base-gpt4-relation" : TransformersModel("geektech/flan-t5-base-gpt4-relation"),
-    "llama3/llama-3-8b" : OllamaModel("llama3:8b"),
-    "gemma3:1b" : OllamaModel("gemma3:1b"),
+    # "llama3/llama-3-8b" : OllamaModel("llama3:8b"),
+    # "gemma3:1b" : OllamaModel("gemma3:1b"),
+    "default" : OllamaModel("llama3:8b"),
 }
 

@@ -29,4 +29,5 @@ urlpatterns = [
     path("", include("citation_screening.urls")),
     path("", include("document_classification.urls")),
     path("", include("organisations.urls")),
+    path("", include("cruise_rag.urls")),
 ]

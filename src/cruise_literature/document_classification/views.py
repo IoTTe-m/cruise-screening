@@ -82,7 +82,8 @@ def query_text2text_api(query: str) -> Dict[str, Any]:
             "http://localhost:8000" + "/question",
             # data=json.dumps({"text": query, "model": "google/flan-t5-small"}),
             # data=json.dumps({"text": query, "model": "llama3/llama-3-8b"}),
-            data=json.dumps({"text": query, "model": "gemma3:1b"}),
+            # data=json.dumps({"text": query, "model": "gemma3:1b"}),
+            data=json.dumps({"text": query, "model": "default"}),
             headers=headers,
         )
         if res.status_code != 200:

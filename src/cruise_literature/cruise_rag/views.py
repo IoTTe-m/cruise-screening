@@ -9,8 +9,9 @@ from langchain.chains import RetrievalQA
 from langchain.agents import initialize_agent, AgentType
 from django.core.files.temp import NamedTemporaryFile
 from django.contrib.auth.decorators import login_required
-from models import LLMConversation
-import requests, os
+from django.http import HttpResponse, JsonResponse
+from .models import LLMConversation
+import requests, os, json
 
 # Initialize Elasticsearch and embeddings
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
@@ -168,17 +169,43 @@ def remove_paper_from_elasticsearch_index(review_id, paper):
             break
     print(f"Finished removing pages from index {index_name}")
 
-@login_required
-def ask_agent(screening: int, conversation_id: int, question: str):
+# @login_required
+def ask_agent(request, screening: int, conversation_id: int):
     """
     Function to ask the agent a question.
     Args:
         screening (int): The screening ID associated with the conversation.
         conversation_id (int): The unique identifier for the conversation.
-        question (str): Question to ask the agent
+        
+    Body:
+        {
+            "question": "[Your question here]"
+        }
     Returns:
         str: Answer from the agent
     """
+
+    print("Asking agent...")
+
+    print(request)
+
+    if request.method != 'POST':
+        return JsonResponse(
+            {"error": "Method not allowed"}, status=405
+        )
+    
+    print("Method ok")
+    
+    try:
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+    except json.JSONDecodeError:
+        return "Invalid JSON", 400
+    
+    if "question" not in body:
+        return "Question not found", 400
+    
+    question = body.get("question")
 
     try:
         conversation = LLMConversation.objects.get(
@@ -191,8 +218,18 @@ def ask_agent(screening: int, conversation_id: int, question: str):
         raise ValueError("Multiple conversations found")
     
     history = conversation.conversation
+
+    system_prompt = '''
+    You are a helpful reasearch assistant. Your task is to help the user with their research concerning systematic review.
+    The use have selected a set of research papers and you have access to them.
+    You are given access to a database of research papers and a RAG system that can help you access the information about the selected papers.
+    When you are asked a question, you should first check if the answer is in the database if this is a question that can be answered by the analysis of the papers.
+    Every citation should be in the form of [1] or [2] or [3] etc. depending on the number of citations.
+    At the end of the answer, you should provide a list of references in the form of [1] Paper title, authors, doi, page number, each one in a new line.
+    If the question is not related to the papers, you should answer it as a normal assistant.
+    '''
     
-    query = [("system", "TODO")] + \
+    query = [("system", system_prompt)] + \
         [(item.get("role"), item.get("content")) for item in history] + \
         [("human", question)]
 
@@ -205,7 +242,7 @@ def ask_agent(screening: int, conversation_id: int, question: str):
     )
 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-001",
+        model="gemini-2.5-flash-preview-04-17",
         temperature=0,
         max_tokens=None,
         timeout=None,
@@ -218,16 +255,38 @@ def ask_agent(screening: int, conversation_id: int, question: str):
 
     @tool
     def rag_tool(query: str) -> str:
-        """Use this tool to get information from the RAG model if needed."""
+        """Use this tool to get information from the RAG model if needed.
+        This tool allows you to ask questions about the papers selected by the user.
+        This tool should return the answer with all the necessary citations.
+        """
         return rag_chain.invoke(query)
     
-    tools = [rag_tool]
+    @tool
+    def elastic_search_tool(query: str) -> str:
+        """Use this tool to get information from the Elasticsearch index if needed.
+        This tool allows you to ask questions about the papers selected by the user.
+        This tool should return the answer together with the metadata of the paper, by default returning the first 3 results.
+        """
+        results = elastic_vector_search.similarity_search(query, k=3)
+
+        response = ""
+        for i, result in enumerate(results):
+            response += f"Result {i+1}:\n"
+            response += f"Title: {result.metadata['title']}\n"
+            response += f"Authors: {result.metadata['authors']}\n"
+            response += f"DOI: {result.metadata['doi']}\n"
+            response += f"Page: {result.metadata['page']}\n\n"
+            response += f"Content:\n{result.page_content}\n\n\n\n"
+
+        return response
+    
+    tools = [rag_tool, elastic_search_tool]
 
     agent = initialize_agent(
         tools=tools,
         llm=llm,
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        max_iterations=5,
+        max_iterations=7,
         early_stopping_method="generate",
         verbose=True,
     )
@@ -248,4 +307,10 @@ def ask_agent(screening: int, conversation_id: int, question: str):
     )
 
     conversation.save()
-    return result['output']
+
+    print(result)
+    return JsonResponse(
+        {
+            "answer": result,
+        }
+    )
