@@ -24,16 +24,18 @@ embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 
 
 def review_id_to_index(review_id):
-    return f'review_{review_id}_index'
+    return f"review_{review_id}_index"
+
 
 def get_id_for_a_page_by_metadata(title, page, doi):
     return f"{title}_{page}_{doi}"
 
+
 def get_id_for_a_page(paper_page):
     return get_id_for_a_page_by_metadata(
-        paper_page.metadata['title'],
-        paper_page.metadata['page'],
-        paper_page.metadata['doi'],
+        paper_page.metadata["title"],
+        paper_page.metadata["page"],
+        paper_page.metadata["doi"],
     )
 
 
@@ -60,21 +62,13 @@ def add_paper_to_elasticsearch_index(review_id, paper):
     Function to index embeddings.
     """
     print("Adding paper to Elasticsearch index for RAG...")
-    # print(f"Paper: {paper}")
     print(f"PDF: {paper.get('pdf', 'No PDF')}")
-    # print(f"Review ID: {review_id}")
-    print()
-    # we only care about documents with pdf
-    # we download the pdf
-    # we convert create embedings 
-    # we will use the pdf as the document if it exists, otherwise we will use the abstract
-    # we will have to add appropriate metadata to the document, so that we can use it to provide citations
 
     paper_pages = []
 
     try:
-        if 'pdf' in paper and paper['pdf']:
-            pdf_url = paper['pdf']
+        if "pdf" in paper and paper["pdf"]:
+            pdf_url = paper["pdf"]
             temp_pdf_file = download_pdf(pdf_url)
             if temp_pdf_file:
                 # Load the PDF and extract text
@@ -82,10 +76,10 @@ def add_paper_to_elasticsearch_index(review_id, paper):
                 paper_pages = pdf_loader.load_and_split()
 
                 for paper_page in paper_pages:
-                    paper_page.metadata['title'] = paper['title']
-                    paper_page.metadata['authors'] = paper['authors']
-                    paper_page.metadata['doi'] = paper['doi']
-                    paper_page.metadata['abstract'] = paper['abstract']
+                    paper_page.metadata["title"] = paper["title"]
+                    paper_page.metadata["authors"] = paper["authors"]
+                    paper_page.metadata["doi"] = paper["doi"]
+                    paper_page.metadata["abstract"] = paper["abstract"]
 
                 print(f"Loaded {len(paper_pages)} pages from PDF.")
             else:
@@ -94,15 +88,15 @@ def add_paper_to_elasticsearch_index(review_id, paper):
         print(f"Error loading PDF: {e}")
 
     print(paper)
-    
+
     if len(paper_pages) == 0:
         print("No PDF file found, using abstract instead.")
 
-        content = paper['abstract'] if 'abstract' in paper else None
-        
+        content = paper["abstract"] if "abstract" in paper else None
+
         if not content:
             print("No abstract found.")
-            content = paper['snippet'] if 'snippet' in paper else None
+            content = paper["snippet"] if "snippet" in paper else None
 
         if not content:
             print("No snippet found, stop.")
@@ -112,12 +106,12 @@ def add_paper_to_elasticsearch_index(review_id, paper):
             Document(
                 page_content=content,
                 metadata={
-                    'title': paper['title'] if 'title' in paper else "",
-                    'authors': paper['authors'] if 'authors' in paper else "",
-                    'doi': paper['doi'] if 'doi' in paper else "",
-                    'abstract': content,
-                    'page': -1,
-                }
+                    "title": paper["title"] if "title" in paper else "",
+                    "authors": paper["authors"] if "authors" in paper else "",
+                    "doi": paper["doi"] if "doi" in paper else "",
+                    "abstract": content,
+                    "page": -1,
+                },
             )
         ]
 
@@ -129,10 +123,8 @@ def add_paper_to_elasticsearch_index(review_id, paper):
         index_name=index_name,
         embedding=embeddings,
     )
-    elastic_vector_search.add_documents(
-        paper_pages,
-        ids=ids
-    )
+    elastic_vector_search.add_documents(paper_pages, ids=ids)
+
 
 def remove_paper_from_elasticsearch_index(review_id, paper):
     print("Removing paper from Elasticsearch index for RAG...")
@@ -144,32 +136,30 @@ def remove_paper_from_elasticsearch_index(review_id, paper):
     )
 
     page_number = -1
-    
+
     first_page_id = get_id_for_a_page_by_metadata(
-        paper['title'],
+        paper["title"],
         page_number,
-        paper['doi'],
+        paper["doi"],
     )
 
     try:
-        print(f"Removing page {page_number} with id {first_page_id} from index {index_name}")
-        elastic_vector_search.delete(
-            ids=[first_page_id]
+        print(
+            f"Removing page {page_number} with id {first_page_id} from index {index_name}"
         )
+        elastic_vector_search.delete(ids=[first_page_id])
     except Exception:
         pass
 
     while True:
         page_number += 1
         page_id = get_id_for_a_page_by_metadata(
-            paper['title'],
+            paper["title"],
             page_number,
-            paper['doi'],
+            paper["doi"],
         )
         try:
-            if not elastic_vector_search.delete(
-                    ids=[page_id]
-                ):
+            if not elastic_vector_search.delete(ids=[page_id]):
                 break
         except Exception:
             break
@@ -185,16 +175,12 @@ def clear_conversation(request, conversation_id: int):
     Returns:
         str: Success message
     """
-    
-    if request.method != 'PATCH':
-        return JsonResponse(
-            {"error": "Method not allowed"}, status=405
-        )
-    
+
+    if request.method != "PATCH":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     try:
-        conversation = LLMConversation.objects.get(
-            conversation_id=conversation_id
-        )
+        conversation = LLMConversation.objects.get(conversation_id=conversation_id)
     except LLMConversation.DoesNotExist:
         return JsonResponse(
             {
@@ -202,13 +188,15 @@ def clear_conversation(request, conversation_id: int):
             },
             status=404,
         )
-    
+
     conversation.conversation = []
     conversation.save()
 
-    return JsonResponse({
-        "message": "Conversation cleared",
-    })
+    return JsonResponse(
+        {
+            "message": "Conversation cleared",
+        }
+    )
 
 
 def delete_conversation(request, conversation_id: int):
@@ -220,16 +208,12 @@ def delete_conversation(request, conversation_id: int):
     Returns:
         str: Success message
     """
-    
-    if request.method != 'DELETE':
-        return JsonResponse(
-            {"error": "Method not allowed"}, status=405
-        )
-    
+
+    if request.method != "DELETE":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     try:
-        conversation = LLMConversation.objects.get(
-            conversation_id=conversation_id
-        )
+        conversation = LLMConversation.objects.get(conversation_id=conversation_id)
     except LLMConversation.DoesNotExist:
         return JsonResponse(
             {
@@ -237,12 +221,14 @@ def delete_conversation(request, conversation_id: int):
             },
             status=404,
         )
-    
+
     conversation.delete()
 
-    return JsonResponse({
-        "message": "Conversation deleted",
-    })
+    return JsonResponse(
+        {
+            "message": "Conversation deleted",
+        }
+    )
 
 
 @login_required
@@ -255,15 +241,13 @@ def handle_conversation(request, conversation_id: int):
     Returns:
         str: Conversation history
     """
-    
-    if request.method == 'PATCH':
+
+    if request.method == "PATCH":
         return clear_conversation(request, conversation_id)
-    elif request.method == 'DELETE':
+    elif request.method == "DELETE":
         return delete_conversation(request, conversation_id)
     else:
-        return JsonResponse(
-            {"error": "Method not allowed"}, status=405
-        )
+        return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
 def get_conversation_ids(request, screening_id: int):
@@ -274,31 +258,27 @@ def get_conversation_ids(request, screening_id: int):
     Returns:
         str: Conversation IDs
     """
-    
-    if request.method != 'GET':
-        return JsonResponse(
-            {"error": "Method not allowed"}, status=405
-        )
-    
+
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     review = LiteratureReview.objects.get(id=screening_id)
     if not review:
-        return JsonResponse(
-            {"error": "Screening not found"}, status=404
-        )
-    
-    if request.user not in review.members.all():
-        return JsonResponse(
-            {"error": "User not in review"}, status=403
-        )
-    
-    conversations = LLMConversation.objects.filter(
-        screening_id=review
-    ).values_list('conversation_id', flat=True)
+        return JsonResponse({"error": "Screening not found"}, status=404)
 
-    return JsonResponse({
-        "conversation_ids": list(conversations),
-    })
-    
+    if request.user not in review.members.all():
+        return JsonResponse({"error": "User not in review"}, status=403)
+
+    conversations = LLMConversation.objects.filter(screening_id=review).values_list(
+        "conversation_id", flat=True
+    )
+
+    return JsonResponse(
+        {
+            "conversation_ids": list(conversations),
+        }
+    )
+
 
 def add_conversation(request, screening_id: int):
     """
@@ -308,32 +288,26 @@ def add_conversation(request, screening_id: int):
     Returns:
         str: Conversation ID
     """
-    
-    if request.method != 'POST':
-        return JsonResponse(
-            {"error": "Method not allowed"}, status=405
-        )
-    
+
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     review = LiteratureReview.objects.get(id=screening_id)
     if not review:
-        return JsonResponse(
-            {"error": "Screening not found"}, status=404
-        )
-    
+        return JsonResponse({"error": "Screening not found"}, status=404)
+
     if request.user not in review.members.all():
-        return JsonResponse(
-            {"error": "User not in review"}, status=403
-        )
-    
-    new_conversation = LLMConversation.objects.create(
-           screening_id=review
-    )
+        return JsonResponse({"error": "User not in review"}, status=403)
+
+    new_conversation = LLMConversation.objects.create(screening_id=review)
 
     print(new_conversation)
 
-    return JsonResponse({
-        "conversation_id": new_conversation.conversation_id,
-    })
+    return JsonResponse(
+        {
+            "conversation_id": new_conversation.conversation_id,
+        }
+    )
 
 
 @login_required
@@ -345,15 +319,13 @@ def manage_conversations(request, screening_id: int):
     Returns:
         str: Conversation ID
     """
-    
-    if request.method == 'POST':
+
+    if request.method == "POST":
         return add_conversation(request, screening_id)
-    elif request.method == 'GET':
+    elif request.method == "GET":
         return get_conversation_ids(request, screening_id)
     else:
-        return JsonResponse(
-            {"error": "Method not allowed"}, status=405
-        )
+        return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
 @login_required
@@ -363,7 +335,7 @@ def ask_agent(request, conversation_id: int):
     Args:
         screening (int): The screening ID associated with the conversation.
         conversation_id (int): The unique identifier for the conversation.
-        
+
     Body:
         {
             "question": "[Your question here]"
@@ -374,41 +346,31 @@ def ask_agent(request, conversation_id: int):
 
     print("Asking agent...")
 
-    if request.method != 'POST':
-        return JsonResponse(
-            {"error": "Method not allowed"}, status=405
-        )
-    
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     print("Correct method")
 
     try:
-        body_unicode = request.body.decode('utf-8')
+        body_unicode = request.body.decode("utf-8")
         body = json.loads(body_unicode)
     except json.JSONDecodeError:
-        return JsonResponse(
-            {"error": "Invalid JSON"}, status=400
-        )
-    
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
     print("JSON decoded")
-    
+
     if "question" not in body:
-        return JsonResponse(
-            {"error": "Missing question"}, status=400
-        )
-    
+        return JsonResponse({"error": "Missing question"}, status=400)
+
     question = body.get("question", None)
 
     if not question:
-        return JsonResponse(
-            {"error": "Empty question"}, status=400
-        )
+        return JsonResponse({"error": "Empty question"}, status=400)
 
     print(f"Question received: {question}")
 
     try:
-        conversation = LLMConversation.objects.get(
-            conversation_id=conversation_id
-        )
+        conversation = LLMConversation.objects.get(conversation_id=conversation_id)
     except LLMConversation.DoesNotExist:
         return JsonResponse(
             {
@@ -418,12 +380,12 @@ def ask_agent(request, conversation_id: int):
         )
     except LLMConversation.MultipleObjectsReturned:
         raise ValueError("Multiple conversations found")
-    
+
     print("Conversation found")
-    
+
     history = conversation.conversation
 
-    system_prompt = '''
+    system_prompt = """
     You are a helpful reasearch assistant. Your task is to help the user with their research concerning systematic review.
     The user have selected a set of research papers and you have access to them.
     You are given access to a database of research papers and a RAG system that can help you access the information about the selected papers.
@@ -435,19 +397,18 @@ def ask_agent(request, conversation_id: int):
     You should use tools rather too much than too little. You should try your best to answer the question using the tools.
     You can use the tools as many times as you want.
     You should always conform to the format required by the tools' input.
-    '''
+    """
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("placeholder", "{chat_history}"),
-        ("human", "{input}"),
-        ("placeholder", "{agent_scratchpad}"),
-    ])
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            ("placeholder", "{chat_history}"),
+            ("human", "{input}"),
+            ("placeholder", "{agent_scratchpad}"),
+        ]
+    )
 
-    chat_history = [
-        (item.get("role"), item.get("content"))
-        for item in history
-    ]
+    chat_history = [(item.get("role"), item.get("content")) for item in history]
 
     review_id = conversation.screening_id.pk
     index_name = review_id_to_index(review_id)
@@ -471,8 +432,10 @@ def ask_agent(request, conversation_id: int):
         max_retries=1,
     )
 
-    rag_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff",
-        retriever=elastic_vector_search.as_retriever(search_kwargs={"k": 3})
+    rag_chain = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type="stuff",
+        retriever=elastic_vector_search.as_retriever(search_kwargs={"k": 3}),
     )
 
     @tool
@@ -485,7 +448,7 @@ def ask_agent(request, conversation_id: int):
         as this tool will try to answer your question very literally.
         """
         return rag_chain.invoke(query)
-    
+
     @tool
     def elastic_search_tool(query: str) -> str:
         """Use this tool to get information from the Elasticsearch index if needed.
@@ -504,15 +467,16 @@ def ask_agent(request, conversation_id: int):
             response += f"Content:\n{result.page_content}\n\n\n\n"
 
         return response
-    
+
     tools = [rag_tool, elastic_search_tool]
 
     agent = create_tool_calling_agent(llm, tools, prompt)
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, max_iterations=15)
-    result = agent_executor.invoke({
-        "input": question,
-        "chat_history": chat_history
-    })['output']
+    agent_executor = AgentExecutor(
+        agent=agent, tools=tools, verbose=True, max_iterations=15
+    )
+    result = agent_executor.invoke({"input": question, "chat_history": chat_history})[
+        "output"
+    ]
 
     print(f"Result: {result}")
 
@@ -525,7 +489,7 @@ def ask_agent(request, conversation_id: int):
             {
                 "role": "assistant",
                 "content": result,
-            }
+            },
         ]
     )
 
