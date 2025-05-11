@@ -22,14 +22,7 @@ As a minimum, you need to install the first two parts.
 
 ### 1.1 Python Django Backend
 
-Project was tested on Python 3.12. It will not run on Python 3.8 and below because of type hints for generics.
-
-Create uv environment:
-
-```bash
-$ uv venv
-```
-
+Project was tested on Python 3.12. It will not run on Python 3.8 and below because of type hints for generics. You need to install `uv` in order to run the project. 
 
 npm install bulma-calendar
 
