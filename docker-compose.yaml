@@ -1,17 +1,4 @@
-version: '3.9'
-
-services:
-  postgres:
-    image: postgres
-    restart: always
-    environment:
-      - POSTGRES_DB=cruise_literature
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-volumes:
-  db_data:
+include:
+  - ./src/cruise_literature/docker-compose.yaml
+  - ./src/backend/search_app/docker-compose-juno.yml
+  - ./src/backend/search_app/docker-compose.yml

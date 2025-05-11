@@ -22,25 +22,14 @@ As a minimum, you need to install the first two parts.
 
 ### 1.1 Python Django Backend
 
-Project was tested on Python 3.9+. It will not run on Python 3.8 and below because of type hints for generics.
+Project was tested on Python 3.12. It will not run on Python 3.8 and below because of type hints for generics.
 
-Create [conda](https://docs.conda.io/en/latest/miniconda.html) environment:
-
-```bash
-$ conda create --name cruise-literature python==3.9.12
-```
-
-Activate the environment:
+Create uv environment:
 
 ```bash
-$ source activate cruise-literature
+$ uv venv
 ```
 
-Use pip to install requirements (you will need `g++` to install fasttext):
-
-```bash
-(cruise-literature)$ pip install -r requirements.txt
-```
 
 npm install bulma-calendar
 
@@ -54,7 +43,7 @@ npm install bulma-calendar
 Start psql and open database:
 
 ```bash
-$ sudo docker compose up
+$ bash setup.sh
 ```
 
 Update the DATABASE_URL entry in the `.env` file (see 2.1 Before first run). Replace `SYSTEM_USERNAME` with your system username and `YOUR_PASSWORD` with your desired database password.
