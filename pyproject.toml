@@ -25,10 +25,6 @@ dependencies = [
     "scholarly~=1.7.2",
     "wikipedia~=1.4.0",
     "xmltodict~=0.13.0",
-    "langchain~=0.3.23",
-    "langchain-google-genai~=2.1.2",
-    "langchain_elasticsearch",
-    "langchain-community",
     "pypdf>=5.4.0",
     "ruff>=0.11.11",
 ]
@@ -42,6 +38,10 @@ search-app = [
 ]
 
 ml-api = [
+    "langchain~=0.3.23",
+    "langchain-google-genai~=2.1.2",
+    "langchain_elasticsearch",
+    "langchain-community",
     "transformers==4.34.0",
     "torch==2.5.1",
     "requests==2.31.0",

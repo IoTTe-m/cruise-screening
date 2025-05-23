@@ -1,6 +1,9 @@
 name: Ruff Lint and Format Check
 
-on: [push]
+on:
+  push:
+    branches: [main, release]
+  pull_request:
 
 jobs:
   lint_and_format:
