@@ -3,21 +3,20 @@ from langchain_elasticsearch import ElasticsearchStore
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.tools import tool
 from langchain.chains import RetrievalQA
-from langchain.agents import initialize_agent, AgentType
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent, tool
 from langchain_core.prompts import ChatPromptTemplate
 
 from django.core.files.temp import NamedTemporaryFile
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 
 from literature_review.models import LiteratureReview
 from .models import LLMConversation
-import requests, os, json
+import requests
+import json
 
 # Initialize Elasticsearch and embeddings
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")

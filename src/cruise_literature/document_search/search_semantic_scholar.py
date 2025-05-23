@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict
 import requests
 
 from document_search.utils import SearchResultWithStatus

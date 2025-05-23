@@ -2,10 +2,7 @@ from langchain_core.documents import Document
 from langchain_elasticsearch import ElasticsearchStore
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-import getpass
-import os
 import dotenv
-import json
 
 
 dotenv.load_dotenv()

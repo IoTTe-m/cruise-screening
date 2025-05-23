@@ -3,8 +3,6 @@ from typing import Dict, Any, Optional
 
 import requests
 from django.db import transaction
-from django.http import Http404
-from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.exceptions import APIException
 

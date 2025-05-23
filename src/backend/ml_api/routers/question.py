@@ -2,7 +2,6 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from external_models.transformers_model import models
-from typing import Dict
 
 router = APIRouter()
 
