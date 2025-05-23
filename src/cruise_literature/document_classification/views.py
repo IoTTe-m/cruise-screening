@@ -88,7 +88,6 @@ def query_text2text_api(query: str) -> Dict[str, Any]:
             raise APIException(f"Text-to-text API error: {res.status_code}")
         response = res.json()
         response["status"] = "OK"
-        print(response)
         return response
     except requests.exceptions.ConnectionError:
         return {"status": "error", "reason": "Text-to-text API is not available"}

@@ -17,6 +17,10 @@ from literature_review.models import LiteratureReview
 from .models import LLMConversation
 import requests
 import json
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 # Initialize Elasticsearch and embeddings
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
@@ -39,20 +43,20 @@ def get_id_for_a_page(paper_page):
 
 
 def download_pdf(pdf_url):
-    print(f"Downloading PDF from {pdf_url}")
+    logger.info(f"Downloading PDF from {pdf_url}")
     try:
         temp_file = NamedTemporaryFile()
         response = requests.get(pdf_url, verify=False)
         if response.status_code == 200:
             temp_file.write(response.content)
             temp_file.flush()
-            print(f"PDF downloaded to {temp_file.name}")
+            logger.info(f"PDF downloaded to {temp_file.name}")
             return temp_file
         else:
-            print(f"Failed to download PDF: {response.status_code}")
+            logger.error(f"Failed to download PDF: {response.status_code}")
             return None
     except Exception as e:
-        print(f"Error downloading PDF: {e}")
+        logger.error(f"Error downloading PDF: {e}")
         return None
 
 
@@ -60,8 +64,8 @@ def add_paper_to_elasticsearch_index(review_id, paper):
     """
     Function to index embeddings.
     """
-    print("Adding paper to Elasticsearch index for RAG...")
-    print(f"PDF: {paper.get('pdf', 'No PDF')}")
+    logger.info("Adding paper to Elasticsearch index for RAG...")
+    logger.info(f"PDF: {paper.get('pdf', 'No PDF')}")
 
     paper_pages = []
 
@@ -80,25 +84,25 @@ def add_paper_to_elasticsearch_index(review_id, paper):
                     paper_page.metadata["doi"] = paper["doi"]
                     paper_page.metadata["abstract"] = paper["abstract"]
 
-                print(f"Loaded {len(paper_pages)} pages from PDF.")
+                logger.info(f"Loaded {len(paper_pages)} pages from PDF.")
             else:
-                print("No PDF file found or failed to download.")
+                logger.info("No PDF file found or failed to download.")
     except Exception as e:
-        print(f"Error loading PDF: {e}")
+        logger.error(f"Error loading PDF: {e}")
 
-    print(paper)
+    logger.info(paper)
 
     if len(paper_pages) == 0:
-        print("No PDF file found, using abstract instead.")
+        logger.info("No PDF file found, using abstract instead.")
 
         content = paper["abstract"] if "abstract" in paper else None
 
         if not content:
-            print("No abstract found.")
+            logger.info("No abstract found.")
             content = paper["snippet"] if "snippet" in paper else None
 
         if not content:
-            print("No snippet found, stop.")
+            logger.info("No snippet found, stop.")
             return
 
         paper_pages = [
@@ -126,7 +130,7 @@ def add_paper_to_elasticsearch_index(review_id, paper):
 
 
 def remove_paper_from_elasticsearch_index(review_id, paper):
-    print("Removing paper from Elasticsearch index for RAG...")
+    logger.info("Removing paper from Elasticsearch index for RAG...")
     index_name = review_id_to_index(review_id)
     elastic_vector_search = ElasticsearchStore(
         es_url="http://localhost:9200",
@@ -143,7 +147,7 @@ def remove_paper_from_elasticsearch_index(review_id, paper):
     )
 
     try:
-        print(
+        logger.info(
             f"Removing page {page_number} with id {first_page_id} from index {index_name}"
         )
         elastic_vector_search.delete(ids=[first_page_id])
@@ -162,7 +166,7 @@ def remove_paper_from_elasticsearch_index(review_id, paper):
                 break
         except Exception:
             break
-    print(f"Finished removing pages from index {index_name}")
+    logger.info(f"Finished removing pages from index {index_name}")
 
 
 def clear_conversation(request, conversation_id: int):
@@ -300,7 +304,7 @@ def add_conversation(request, screening_id: int):
 
     new_conversation = LLMConversation.objects.create(screening_id=review)
 
-    print(new_conversation)
+    logger.info(new_conversation)
 
     return JsonResponse(
         {
@@ -343,12 +347,12 @@ def ask_agent(request, conversation_id: int):
         str: Answer from the agent
     """
 
-    print("Asking agent...")
+    logger.info("Asking agent...")
 
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
-    print("Correct method")
+    logger.info("Correct method")
 
     try:
         body_unicode = request.body.decode("utf-8")
@@ -356,7 +360,7 @@ def ask_agent(request, conversation_id: int):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-    print("JSON decoded")
+    logger.info("JSON decoded")
 
     if "question" not in body:
         return JsonResponse({"error": "Missing question"}, status=400)
@@ -366,7 +370,7 @@ def ask_agent(request, conversation_id: int):
     if not question:
         return JsonResponse({"error": "Empty question"}, status=400)
 
-    print(f"Question received: {question}")
+    logger.info(f"Question received: {question}")
 
     try:
         conversation = LLMConversation.objects.get(conversation_id=conversation_id)
@@ -380,7 +384,7 @@ def ask_agent(request, conversation_id: int):
     except LLMConversation.MultipleObjectsReturned:
         raise ValueError("Multiple conversations found")
 
-    print("Conversation found")
+    logger.info("Conversation found")
 
     history = conversation.conversation
 
@@ -412,8 +416,8 @@ def ask_agent(request, conversation_id: int):
     review_id = conversation.screening_id.pk
     index_name = review_id_to_index(review_id)
 
-    print(f"Id: {review_id}")
-    print(f"Index name: {index_name}")
+    logger.info(f"Id: {review_id}")
+    logger.info(f"Index name: {index_name}")
 
     elastic_vector_search = ElasticsearchStore(
         es_url="http://localhost:9200",
@@ -477,7 +481,7 @@ def ask_agent(request, conversation_id: int):
         "output"
     ]
 
-    print(f"Result: {result}")
+    logger.info(f"Result: {result}")
 
     conversation.conversation.extend(
         [
@@ -494,7 +498,7 @@ def ask_agent(request, conversation_id: int):
 
     conversation.save()
 
-    print(result)
+    logger.info(result)
     return JsonResponse(
         {
             "answer": result,

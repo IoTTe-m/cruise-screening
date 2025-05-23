@@ -2,7 +2,6 @@ from django.db import models
 from literature_review.models import LiteratureReview
 
 # Create your models here.
-# OK!
 
 
 class LLMConversation(models.Model):

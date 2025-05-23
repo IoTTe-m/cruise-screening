@@ -440,7 +440,6 @@ def automatic_screening(request, review_id):
                 x_pred[paper["id"]] = {"title": f"{paper['title']} {paper['abstract']}"}
 
         if classification_result := use_classify_api(xy_train, x_pred, review_id):
-            print(classification_result)
             algorithm_id = classification_result["algorithm_id"]
             y_pred = classification_result["y_pred"]
         else:
