@@ -98,7 +98,7 @@ def add_paper_to_elasticsearch_index(review_id, paper):
         content = paper["abstract"] if "abstract" in paper else None
 
         if not content:
-            print("No abstract found.")
+            logger.info("No abstract found.")
             content = paper["abstract"] if "snippet" in paper else None
 
         if not content:
