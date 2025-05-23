@@ -6,7 +6,8 @@ from typing import List, Any, Tuple
 import re
 import fasttext
 
-from classifiers.binary.base import BaseClassifier
+from .....cruise_literature.document_classification.classifiers.base import BaseClassifier
+
 
 
 def write_temp_fasttext_train_file(
