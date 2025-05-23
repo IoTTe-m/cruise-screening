@@ -23,5 +23,7 @@ cd $CURRENT_DIR
 cd src/cruise_literature
 uv run manage.py makemigrations
 uv run manage.py migrate
+uv run manage.py loaddata users_data.json
+uv run manage.py loaddata search_engines.json
 uv run manage.py runserver 8080
 cd $CURRENT_DIR
