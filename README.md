@@ -42,7 +42,7 @@ $ bash setup.sh
 Update the DATABASE_URL entry in the `.env` file (see 2.1 Before first run). Replace `SYSTEM_USERNAME` with your system username and `YOUR_PASSWORD` with your desired database password.
 
 ```text
-DATABASE_URL=postgres://SYSTEM_USERNAME:YOUR_PASSWORD@localhost:5432/cruise_literature
+DATABASE_URL=postgres://SYSTEM_USERNAME:YOUR_PASSWORD@localhost:5433/cruise_literature
 ```
 
 
