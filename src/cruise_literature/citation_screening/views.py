@@ -1,4 +1,3 @@
-import inspect
 import json
 import time
 from typing import Optional, Dict, Any
@@ -12,7 +11,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 import datetime
 
-from document_classification.registry import MLRegistry
 from document_classification.views import (
     predict_papers,
     prediction_reason,
@@ -20,15 +18,18 @@ from document_classification.views import (
     predict_relevance,
 )
 from literature_review.models import LiteratureReview
-from cruise_rag.views import add_paper_to_elasticsearch_index, remove_paper_from_elasticsearch_index
+from cruise_rag.views import (
+    add_paper_to_elasticsearch_index,
+    remove_paper_from_elasticsearch_index,
+)
 from .models import CitationScreening
 
 
 def _distribute_papers_for_reviewers(
-        papers: list[str],
-        members: list[str],
-        min_decisions: int,
-        papers_per_member: Optional[dict[str, int]] = None,
+    papers: list[str],
+    members: list[str],
+    min_decisions: int,
+    papers_per_member: Optional[dict[str, int]] = None,
 ) -> dict[str, dict[str, list[str]]]:
     """Distribute papers to review members for screening
 
@@ -52,11 +53,11 @@ def _distribute_papers_for_reviewers(
 
     for paper in papers:
         for member in np.random.choice(
-                members,
-                min_decisions,
-                replace=False,
-                p=np.array(list(papers_per_member.values()))
-                  / sum(papers_per_member.values()),
+            members,
+            min_decisions,
+            replace=False,
+            p=np.array(list(papers_per_member.values()))
+            / sum(papers_per_member.values()),
         ):
             if papers_per_member[member] > 0:
                 tasks["new"][member].append(paper)
@@ -65,8 +66,8 @@ def _distribute_papers_for_reviewers(
 
 
 def _update_tasks(
-        old_tasks: dict[str, dict[str, list[str]]],
-        new_tasks: dict[str, dict[str, list[str]]],
+    old_tasks: dict[str, dict[str, list[str]]],
+    new_tasks: dict[str, dict[str, list[str]]],
 ) -> dict[str, dict[str, list[str]]]:
     """Tasks have a format of {status: member: [paper1, ...]}, where status: 'new', 'in_progress', 'done'
 
@@ -284,18 +285,22 @@ def create_screening_decisions(request, review, paper_id):
             "exclusion_decisions": exclusion_decisions,
             "inclusion_decisions": inclusion_decisions,
             "stage": "title_abstract",
-            "domain_relevance": int(domain_relevance)
-            if domain_relevance
-            else domain_relevance,
-            "topic_relevance": int(topic_relevance)
-            if topic_relevance
-            else topic_relevance,
-            "paper_prior_knowledge": int(paper_prior_knowledge)
-            if paper_prior_knowledge
-            else paper_prior_knowledge,
-            "authors_prior_knowledge": int(authors_prior_knowledge)
-            if authors_prior_knowledge
-            else authors_prior_knowledge,
+            "domain_relevance": (
+                int(domain_relevance) if domain_relevance else domain_relevance
+            ),
+            "topic_relevance": (
+                int(topic_relevance) if topic_relevance else topic_relevance
+            ),
+            "paper_prior_knowledge": (
+                int(paper_prior_knowledge)
+                if paper_prior_knowledge
+                else paper_prior_knowledge
+            ),
+            "authors_prior_knowledge": (
+                int(authors_prior_knowledge)
+                if authors_prior_knowledge
+                else authors_prior_knowledge
+            ),
             "screening_time": screening_time,
         }
     ]
@@ -354,8 +359,8 @@ def screen_paper(request, review_id, paper_id):
 
         # SCREENING HERE
         if make_decision(
-            paper['decisions']['exclusion_decisions'],
-            paper['decisions']['inclusion_decisions'],
+            paper["decisions"]["exclusion_decisions"],
+            paper["decisions"]["inclusion_decisions"],
         ):
             add_paper_to_elasticsearch_index(review_id, paper)
         else:
@@ -374,7 +379,9 @@ def screen_paper(request, review_id, paper_id):
         return redirect("literature_review:view_review", review_id=review_id)
 
 
-def use_classify_api(xy_train: Dict, x_pred: Dict, review_id: int) -> Optional[Dict[str, Any]]:
+def use_classify_api(
+    xy_train: Dict, x_pred: Dict, review_id: int
+) -> Optional[Dict[str, Any]]:
     if not settings.ML_API:
         return None
     headers = {"Content-type": "application/json"}
@@ -383,7 +390,9 @@ def use_classify_api(xy_train: Dict, x_pred: Dict, review_id: int) -> Optional[D
         print("x_pred", x_pred)
         res = requests.post(
             "http://localhost:8000" + "/classify",
-            data=json.dumps({"xy_train": xy_train, "x_pred": x_pred, "review_id": review_id}),
+            data=json.dumps(
+                {"xy_train": xy_train, "x_pred": x_pred, "review_id": review_id}
+            ),
             headers=headers,
         )
         return res.json()
@@ -398,7 +407,6 @@ def automatic_screening(request, review_id):
         raise Http404("Review not found")
 
     if request.method == "GET":
-
         # try:
         #     registry = MLRegistry()  # create ML registry
         #     # add to ML registry
@@ -423,15 +431,13 @@ def automatic_screening(request, review_id):
                 if decision == "-1":
                     decision = "1"
                 xy_train[paper["id"]] = {
-                    "title": f'{paper["title"]} {paper["abstract"]}',
+                    "title": f"{paper['title']} {paper['abstract']}",
                     "decision": decision,
                 }  # TODO: convert -1 (maybe) to 1
             else:
-                x_pred[paper["id"]] = {"title": f'{paper["title"]} {paper["abstract"]}'}
+                x_pred[paper["id"]] = {"title": f"{paper['title']} {paper['abstract']}"}
 
-        
         if classification_result := use_classify_api(xy_train, x_pred, review_id):
-            print(classification_result)
             algorithm_id = classification_result["algorithm_id"]
             y_pred = classification_result["y_pred"]
         else:
@@ -537,14 +543,12 @@ def prompt_based_screening(request, review_id):
                     "added_at": str(datetime.datetime.now()),
                     "added_by": request.user.username,
                 }
-
             )
             #  SCREENING HERE
             if make_decision(
                 exclusions=exclusion_decisions,
                 inclusions=inclusion_decisions,
             ):
-            
                 add_paper_to_elasticsearch_index(review_id, paper)
             else:
                 remove_paper_from_elasticsearch_index(review_id, paper)
@@ -556,4 +560,3 @@ def prompt_based_screening(request, review_id):
         template_name="literature_review/view_review.html",
         context={"review": review},
     )
-

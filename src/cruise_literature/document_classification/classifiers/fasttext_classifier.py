@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import os
-from typing import List, Any, Tuple, Dict
+from typing import List, Any, Tuple
 import re
 from .base import BaseClassifier
 import fasttext

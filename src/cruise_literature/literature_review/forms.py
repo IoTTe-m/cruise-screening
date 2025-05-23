@@ -13,11 +13,6 @@ from django.contrib.postgres.forms import (
     ValidationError,
     prefix_validation_error,
 )
-from document_search.search_semantic_scholar import search_semantic_scholar
-from document_search.search_core import search_core
-from document_search.search_google_scholar import search_google_scholar
-from document_search.search_cruise import search_cruise
-from document_search.search_pubmed import search_pubmed
 from users.models import KnowledgeArea
 
 
@@ -217,9 +212,9 @@ class NewLiteratureReviewForm(forms.ModelForm):
 
     search_engines = forms.MultipleChoiceField(
         label=r"""Select in which search engines you want to search for the papers""",
-        choices=lambda: SearchEngine.objects.filter(is_available_for_review=True).values_list(
-            "id", "name"
-        ),
+        choices=lambda: SearchEngine.objects.filter(
+            is_available_for_review=True
+        ).values_list("id", "name"),
         initial=lambda: list(
             SearchEngine.objects.filter(
                 name__in=["CRUISE", "SemanticScholar", "CORE"]

@@ -3,8 +3,6 @@ from typing import Dict, Any, Optional
 
 import requests
 from django.db import transaction
-from django.http import Http404
-from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.exceptions import APIException
 
@@ -136,7 +134,9 @@ def prediction_reason(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     return res["response"] if res["status"] == "OK" else None
 
 
-def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optional[str]:
+def predict_criterion(
+    paper: Dict[str, Any], criterion: list[str, str]
+) -> Optional[str]:
     if not settings.ML_API:
         return None
 
@@ -151,7 +151,7 @@ def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optio
     Paper Abstract: {paper['abstract']}
     Paper Authors: {paper['authors']}
     
-    Systematic review criterion: {criterion['text']}
+    Systematic review criterion: {criterion["text"]}
     Please answer with either "yes", "no" or "not sure". Do NOT write anything except for one of the three options.
     Select: "yes", "no" or "not sure".
     """
@@ -177,7 +177,7 @@ def predict_relevance(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     Paper Abstract: {paper['abstract']}
     Paper Authors: {paper['authors']}
     
-    Systematic review search queries: {', '.join(review.search_queries)}
+    Systematic review search queries: {", ".join(review.search_queries)}
 
     Please answer with either "Highly relevant", "Somewhat relevant" or "Not relevant". Do NOT write anything except for one of the three options.
     Select: "Highly relevant", "Somewhat relevant" or "Not relevant".

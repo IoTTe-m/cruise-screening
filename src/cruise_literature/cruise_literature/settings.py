@@ -11,10 +11,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
-from pathlib import Path
 
 import environ
-from django.conf import settings
 
 env = environ.Env(
     # set casting, default value
@@ -56,7 +54,7 @@ INSTALLED_APPS = [
     "citation_screening",
     "document_classification",
     "organisations",
-    "cruise_rag"
+    "cruise_rag",
 ]
 
 MIDDLEWARE = [
@@ -86,7 +84,6 @@ STATICFILES_DIRS = [
     STATIC_DIR,
 ]
 
-# STATIC_ROOT = env("STATIC_ROOT")
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
