@@ -106,7 +106,6 @@ def predict_papers(review: LiteratureReview, paper: Dict[str, Any]) -> Optional[
     Is the following paper relevant to the review?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
-    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Review: {review.title}
@@ -130,7 +129,6 @@ def prediction_reason(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     Why is the following paper relevant to the review?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
-    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Review: {review.title}
@@ -155,7 +153,6 @@ def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optio
     Is the following paper relevant to the criterion?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
-    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Systematic review criterion: {criterion['text']}
@@ -182,7 +179,6 @@ def predict_relevance(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     Is the following paper relevant to the queries?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
-    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Systematic review search queries: {', '.join(review.search_queries)}
