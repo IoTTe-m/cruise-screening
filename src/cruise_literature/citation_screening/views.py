@@ -411,7 +411,6 @@ def automatic_screening(request, review_id):
         raise Http404("Review not found")
 
     if request.method == "GET":
-
         # try:
         #     registry = MLRegistry()  # create ML registry
         #     # add to ML registry
@@ -436,11 +435,11 @@ def automatic_screening(request, review_id):
                 if decision == "-1":
                     decision = "1"
                 xy_train[paper["id"]] = {
-                    "title": f'{paper["title"]} {paper["abstract"]}',
+                    "title": f"{paper['title']} {paper['abstract']}",
                     "decision": decision,
                 }  # TODO: convert -1 (maybe) to 1
             else:
-                x_pred[paper["id"]] = {"title": f'{paper["title"]} {paper["abstract"]}'}
+                x_pred[paper["id"]] = {"title": f"{paper['title']} {paper['abstract']}"}
 
         if classification_result := use_classify_api(xy_train, x_pred, review_id):
             print(classification_result)
@@ -555,7 +554,6 @@ def prompt_based_screening(request, review_id):
                 exclusions=exclusion_decisions,
                 inclusions=inclusion_decisions,
             ):
-
                 add_paper_to_elasticsearch_index(review_id, paper)
             else:
                 remove_paper_from_elasticsearch_index(review_id, paper)

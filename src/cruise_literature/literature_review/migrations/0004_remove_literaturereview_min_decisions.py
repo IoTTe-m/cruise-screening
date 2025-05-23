@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("literature_review", "0003_literaturereview_papers_updated_at_and_more"),
     ]

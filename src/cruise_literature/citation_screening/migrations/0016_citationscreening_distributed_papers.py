@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("citation_screening", "0015_citationscreening_tasks_updated_at"),
     ]

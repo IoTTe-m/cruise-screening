@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("literature_review", "0002_literaturereviewmember_added_by"),
     ]

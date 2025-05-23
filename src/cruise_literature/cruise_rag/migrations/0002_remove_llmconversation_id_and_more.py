@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("literature_review", "0007_literaturereview_review_type"),
         ("cruise_rag", "0001_initial"),

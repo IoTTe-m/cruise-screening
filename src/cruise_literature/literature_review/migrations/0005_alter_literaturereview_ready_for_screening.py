@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("literature_review", "0004_remove_literaturereview_min_decisions"),
     ]
