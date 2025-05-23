@@ -80,9 +80,6 @@ def query_text2text_api(query: str) -> Dict[str, Any]:
     try:
         res = requests.post(
             "http://localhost:8000" + "/question",
-            # data=json.dumps({"text": query, "model": "google/flan-t5-small"}),
-            # data=json.dumps({"text": query, "model": "llama3/llama-3-8b"}),
-            # data=json.dumps({"text": query, "model": "gemma3:1b"}),
             data=json.dumps({"text": query, "model": "default"}),
             headers=headers,
         )
@@ -90,7 +87,6 @@ def query_text2text_api(query: str) -> Dict[str, Any]:
             raise APIException(f"Text-to-text API error: {res.status_code}")
         response = res.json()
         response["status"] = "OK"
-        print(response)
         return response
     except requests.exceptions.ConnectionError:
         return {"status": "error", "reason": "Text-to-text API is not available"}
@@ -106,7 +102,6 @@ def predict_papers(review: LiteratureReview, paper: Dict[str, Any]) -> Optional[
     Is the following paper relevant to the review?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
-    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Review: {review.title}
@@ -130,7 +125,6 @@ def prediction_reason(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     Why is the following paper relevant to the review?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
-    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Review: {review.title}
@@ -155,7 +149,6 @@ def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optio
     Is the following paper relevant to the criterion?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
-    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Systematic review criterion: {criterion['text']}
@@ -182,7 +175,6 @@ def predict_relevance(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     Is the following paper relevant to the queries?
     Paper Title: {paper['title']}
     Paper Abstract: {paper['abstract']}
-    Paper Snippet: {paper['snippet']}
     Paper Authors: {paper['authors']}
     
     Systematic review search queries: {', '.join(review.search_queries)}

@@ -41,9 +41,7 @@ def _distribute_papers_for_reviewers(
     """
     if len(members) < min_decisions:
         min_decisions = len(members)
-        # raise ValueError(
-            # "Number of members should be greater or equal to annotations_per_paper"
-        # )
+
     if not members:
         raise ValueError("Number of members should be greater than 0")
 

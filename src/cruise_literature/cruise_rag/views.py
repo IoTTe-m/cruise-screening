@@ -96,7 +96,7 @@ def add_paper_to_elasticsearch_index(review_id, paper):
 
         if not content:
             print("No abstract found.")
-            content = paper["snippet"] if "snippet" in paper else None
+            content = paper["abstract"] if "snippet" in paper else None
 
         if not content:
             print("No snippet found, stop.")
@@ -420,8 +420,6 @@ def ask_agent(request, conversation_id: int):
         es_url="http://localhost:9200",
         index_name=index_name,
         embedding=embeddings,
-        # es_user="elastic",
-        # es_password="changeme",
     )
 
     llm = ChatGoogleGenerativeAI(
