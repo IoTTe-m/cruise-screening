@@ -15,20 +15,24 @@ class TransformersModel(LanguageModel):
     def __init__(self, model_name: str):
         self.device = get_device()
         logging.info("Loading model and tokenizer...")
-        
+
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         logging.info("Tokenizer loaded")
-        
+
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
         self.model.to(self.device)
         logging.info("Model loaded")
-    
+
     def generate_response(self, text: str, max_length=32, num_beams=4):
         inputs = self.tokenizer.encode(text, return_tensors="pt").to(self.device)
-        outputs = self.model.generate(inputs, max_length=max_length, num_beams=num_beams, early_stopping=True)
+        outputs = self.model.generate(
+            inputs, max_length=max_length, num_beams=num_beams, early_stopping=True
+        )
         response = self.tokenizer.decode(outputs[0].to("cpu"))
-        return response.replace("<pad>", "").replace("<s>", "").replace("</s>", "").strip()
-    
+        return (
+            response.replace("<pad>", "").replace("<s>", "").replace("</s>", "").strip()
+        )
+
 
 class OllamaModel(LanguageModel):
     def __init__(self, model_name: str):
@@ -38,15 +42,20 @@ class OllamaModel(LanguageModel):
         logging.info("Ollama model pulled")
 
     def generate_response(self, text: str, max_length=32, num_beams=4):
-        response = chat(model=self.model_name, messages=[{
-                'role': 'user',
-                'content': text,
+        response = chat(
+            model=self.model_name,
+            messages=[
+                {
+                    "role": "user",
+                    "content": text,
+                },
+            ],
+            options={
+                "max_tokens": max_length,
+                "num_beams": num_beams,
             },
-        ], options={
-            'max_tokens': max_length,
-            'num_beams': num_beams,
-        })
-        return response['message']['content']
+        )
+        return response["message"]["content"]
 
 
 models = {
@@ -55,6 +64,5 @@ models = {
     # "geektech/flan-t5-base-gpt4-relation" : TransformersModel("geektech/flan-t5-base-gpt4-relation"),
     # "llama3/llama-3-8b" : OllamaModel("llama3:8b"),
     # "gemma3:1b" : OllamaModel("gemma3:1b"),
-    "default" : OllamaModel("llama3:8b"),
+    "default": OllamaModel("llama3:8b"),
 }
-

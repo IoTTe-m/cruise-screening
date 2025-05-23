@@ -4,6 +4,7 @@ from literature_review.models import LiteratureReview
 # Create your models here.
 # OK!
 
+
 class LLMConversation(models.Model):
     """
     The LLMConversation object represents a conversation with a language model.
@@ -31,4 +32,3 @@ class LLMConversation(models.Model):
     )
     conversation_id = models.AutoField(primary_key=True)
     conversation = models.JSONField(default=list, blank=True)
-    

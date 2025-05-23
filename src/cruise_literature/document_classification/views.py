@@ -142,7 +142,9 @@ def prediction_reason(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     return res["response"] if res["status"] == "OK" else None
 
 
-def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optional[str]:
+def predict_criterion(
+    paper: Dict[str, Any], criterion: list[str, str]
+) -> Optional[str]:
     if not settings.ML_API:
         return None
 

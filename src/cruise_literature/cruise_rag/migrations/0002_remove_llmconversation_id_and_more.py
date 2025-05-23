@@ -7,33 +7,37 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('literature_review', '0007_literaturereview_review_type'),
-        ('cruise_rag', '0001_initial'),
+        ("literature_review", "0007_literaturereview_review_type"),
+        ("cruise_rag", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='llmconversation',
-            name='id',
+            model_name="llmconversation",
+            name="id",
         ),
         migrations.RemoveField(
-            model_name='llmconversation',
-            name='screening',
+            model_name="llmconversation",
+            name="screening",
         ),
         migrations.AddField(
-            model_name='llmconversation',
-            name='screening_id',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='literature_review.literaturereview'),
+            model_name="llmconversation",
+            name="screening_id",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="literature_review.literaturereview",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='llmconversation',
-            name='conversation',
+            model_name="llmconversation",
+            name="conversation",
             field=models.JSONField(blank=True, default=list),
         ),
         migrations.AlterField(
-            model_name='llmconversation',
-            name='conversation_id',
+            model_name="llmconversation",
+            name="conversation_id",
             field=models.AutoField(primary_key=True, serialize=False),
         ),
     ]
