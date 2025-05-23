@@ -44,10 +44,6 @@ Update the DATABASE_URL entry in the `.env` file (see 2.1 Before first run). Rep
 ```text
 DATABASE_URL=postgres://SYSTEM_USERNAME:YOUR_PASSWORD@localhost:5432/cruise_literature
 ```
-in our case 
-```text
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/cruise_literature
-```
 
 
 ### 1.3 ElasticSearch and Search API
