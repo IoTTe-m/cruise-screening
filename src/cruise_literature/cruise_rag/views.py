@@ -459,7 +459,7 @@ def ask_agent(request, conversation_id: int):
 
         response = ""
         for i, result in enumerate(results):
-            response += f"Result {i+1}:\n"
+            response += f"Result {i + 1}:\n"
             response += f"Title: {result.metadata['title']}\n"
             response += f"Authors: {result.metadata['authors']}\n"
             response += f"DOI: {result.metadata['doi']}\n"

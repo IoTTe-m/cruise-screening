@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     "citation_screening",
     "document_classification",
     "organisations",
-    "cruise_rag"
+    "cruise_rag",
 ]
 
 MIDDLEWARE = [

@@ -6,8 +6,10 @@ from utils.article import Article, Author
 
 API_ENDPOINT = "https://api.semanticscholar.org/graph/v1/paper/search?query="
 
-FIELDS = "externalIds,url,title,abstract,venue,year,referenceCount,citationCount,influentialCitationCount,isOpenAccess,\
+FIELDS = (
+    "externalIds,url,title,abstract,venue,year,referenceCount,citationCount,influentialCitationCount,isOpenAccess,\
 fieldsOfStudy,s2FieldsOfStudy,publicationTypes,publicationDate,journal,authors"
+)
 
 
 def _get_authors(authors_list: List[Dict[str, str]]) -> List[Author]:

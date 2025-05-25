@@ -100,9 +100,9 @@ def predict_papers(review: LiteratureReview, paper: Dict[str, Any]) -> Optional[
     You are a research assistant. You are given a paper and a systematic review.
     Your task is to determine whether the paper is relevant to the review.
     Is the following paper relevant to the review?
-    Paper Title: {paper['title']}
-    Paper Abstract: {paper['abstract']}
-    Paper Authors: {paper['authors']}
+    Paper Title: {paper["title"]}
+    Paper Abstract: {paper["abstract"]}
+    Paper Authors: {paper["authors"]}
     
     Review: {review.title}
     Review abstract: {review.description}
@@ -123,9 +123,9 @@ def prediction_reason(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     You are a research assistant. You are given a paper and a systematic review.
     Your task is to determine whether the paper is relevant to the review.
     Why is the following paper relevant to the review?
-    Paper Title: {paper['title']}
-    Paper Abstract: {paper['abstract']}
-    Paper Authors: {paper['authors']}
+    Paper Title: {paper["title"]}
+    Paper Abstract: {paper["abstract"]}
+    Paper Authors: {paper["authors"]}
     
     Review: {review.title}
     Review abstract: {review.description}
@@ -136,7 +136,9 @@ def prediction_reason(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     return res["response"] if res["status"] == "OK" else None
 
 
-def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optional[str]:
+def predict_criterion(
+    paper: Dict[str, Any], criterion: list[str, str]
+) -> Optional[str]:
     if not settings.ML_API:
         return None
 
@@ -147,11 +149,11 @@ def predict_criterion(paper: Dict[str, Any], criterion: list[str, str]) -> Optio
     If you are sure that the paper is not relevant to the criterion, please answer with "no".
     Otherwise, please answer with "not sure".
     Is the following paper relevant to the criterion?
-    Paper Title: {paper['title']}
-    Paper Abstract: {paper['abstract']}
-    Paper Authors: {paper['authors']}
+    Paper Title: {paper["title"]}
+    Paper Abstract: {paper["abstract"]}
+    Paper Authors: {paper["authors"]}
     
-    Systematic review criterion: {criterion['text']}
+    Systematic review criterion: {criterion["text"]}
     Please answer with either "yes", "no" or "not sure". Do NOT write anything except for one of the three options.
     Select: "yes", "no" or "not sure".
     """
@@ -173,11 +175,11 @@ def predict_relevance(review: LiteratureReview, paper: Dict[str, Any]) -> Option
     Otherwise, please answer with "Somewhat relevant".
     Sometimes, one or more of the elements of the paper description are not available. In this case, you should answer by analysing the rest of the provided data.
     Is the following paper relevant to the queries?
-    Paper Title: {paper['title']}
-    Paper Abstract: {paper['abstract']}
-    Paper Authors: {paper['authors']}
+    Paper Title: {paper["title"]}
+    Paper Abstract: {paper["abstract"]}
+    Paper Authors: {paper["authors"]}
     
-    Systematic review search queries: {', '.join(review.search_queries)}
+    Systematic review search queries: {", ".join(review.search_queries)}
 
     Please answer with either "Highly relevant", "Somewhat relevant" or "Not relevant". Do NOT write anything except for one of the three options.
     Select: "Highly relevant", "Somewhat relevant" or "Not relevant".

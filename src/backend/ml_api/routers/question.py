@@ -6,12 +6,15 @@ from typing import Dict
 
 router = APIRouter()
 
+
 class QuestionInput(BaseModel):
     text: str
     model: str
-    
+
+
 class QuestionResponse(BaseModel):
     response: str
+
 
 @router.post("/")
 async def question(data: QuestionInput) -> QuestionResponse:
@@ -22,4 +25,7 @@ async def question(data: QuestionInput) -> QuestionResponse:
         return QuestionResponse(response=response)
     except Exception as e:
         logging.error(f"Error during question answering: {e}")
-        raise HTTPException(status_code=503, detail="Service Unavailable: Unable to process the request.")
+        raise HTTPException(
+            status_code=503,
+            detail="Service Unavailable: Unable to process the request.",
+        )
