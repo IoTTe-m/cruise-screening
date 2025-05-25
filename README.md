@@ -143,6 +143,12 @@ Add `YOUR_IP` to `ALLOWED_HOSTS` in `.env` file, for example:
 ALLOWED_HOSTS=123.456.789.0
 ```
 
+In the `src/backend/search_app/docker-compose.yml` file modify the IP address in the following line:
+
+```text
+network.host=0.0.0.0
+```
+
 Run Django server:
 
 ```bash
