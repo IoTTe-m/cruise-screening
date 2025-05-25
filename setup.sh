@@ -2,7 +2,7 @@
 # docker
 COMPOSE_FILES=(
     ./src/backend/search_app/docker-compose.yml
-    ./src/backend/search_app/docker-compose-local.yml
+    ./src/backend/search_app/docker-compose-juno.yml
     ./src/cruise_literature/docker-compose.yaml
 )
 
