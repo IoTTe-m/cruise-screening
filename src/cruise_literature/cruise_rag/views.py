@@ -1,5 +1,7 @@
 # Create your views here.
 from langchain_elasticsearch import ElasticsearchStore
+from elasticsearch import Elasticsearch
+
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
@@ -24,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize Elasticsearch and embeddings
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-
+es_connection = Elasticsearch("http://localhost:9200")
 
 def review_id_to_index(review_id):
     return f"review_{review_id}_index"
@@ -122,7 +124,7 @@ def add_paper_to_elasticsearch_index(review_id, paper):
 
     index_name = review_id_to_index(review_id)
     elastic_vector_search = ElasticsearchStore(
-        es_url="http://localhost:9200",
+        es_connection=es_connection,
         index_name=index_name,
         embedding=embeddings,
     )
@@ -133,7 +135,7 @@ def remove_paper_from_elasticsearch_index(review_id, paper):
     logger.info("Removing paper from Elasticsearch index for RAG...")
     index_name = review_id_to_index(review_id)
     elastic_vector_search = ElasticsearchStore(
-        es_url="http://localhost:9200",
+        es_connection=es_connection,
         index_name=index_name,
         embedding=embeddings,
     )
@@ -418,9 +420,9 @@ def ask_agent(request, conversation_id: int):
 
     logger.info(f"Id: {review_id}")
     logger.info(f"Index name: {index_name}")
-
+    
     elastic_vector_search = ElasticsearchStore(
-        es_url="http://localhost:9200",
+        es_connection=es_connection,
         index_name=index_name,
         embedding=embeddings,
     )
