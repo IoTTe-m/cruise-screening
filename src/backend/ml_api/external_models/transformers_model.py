@@ -64,5 +64,6 @@ models = {
     # "geektech/flan-t5-base-gpt4-relation" : TransformersModel("geektech/flan-t5-base-gpt4-relation"),
     # "llama3/llama-3-8b" : OllamaModel("llama3:8b"),
     # "gemma3:1b" : OllamaModel("gemma3:1b"),
-    "default": OllamaModel("llama3:8b"),
+    "default" : OllamaModel("gemma3:1b"),
+    # "default": OllamaModel("llama3:8b"),
 }
