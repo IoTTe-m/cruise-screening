@@ -96,7 +96,7 @@ def add_paper_to_elasticsearch_index(review_id, paper):
 
         if not content:
             print("No abstract found.")
-            content = paper["snippet"] if "snippet" in paper else None
+            content = paper["abstract"] if "snippet" in paper else None
 
         if not content:
             print("No snippet found, stop.")
@@ -459,7 +459,7 @@ def ask_agent(request, conversation_id: int):
 
         response = ""
         for i, result in enumerate(results):
-            response += f"Result {i+1}:\n"
+            response += f"Result {i + 1}:\n"
             response += f"Title: {result.metadata['title']}\n"
             response += f"Authors: {result.metadata['authors']}\n"
             response += f"DOI: {result.metadata['doi']}\n"

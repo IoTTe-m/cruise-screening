@@ -76,6 +76,13 @@ Check [prompt_API](src/backend/ml_api/README.md) documentation to learn more abo
 
 This fields will also apply after making some changes or updating the code, when the database could be out of sync with the code.
 
+In the top level directory of the project, create a `.env` file and fill it with the following fields:
+
+```text
+DATABASE_URL=postgres://user:password@host:port/dbname
+```
+
+
 Go into `src/cruise_literature/` directory: 
 
 ```bash
@@ -91,7 +98,7 @@ ALLOWED_HOSTS=
 DATABASE_URL=postgres://user:password@host:port/dbname
 ```
 
-Make migrations and migrate the database
+Make migrations and migrate the databaseAPI
 
 ```bash
 (cruise-literature)$ python manage.py makemigrations
