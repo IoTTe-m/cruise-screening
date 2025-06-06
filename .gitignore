@@ -3,6 +3,8 @@ data/
 *.DS_Store
 src/backend/docker-compose-local.yml
 
+evaluation/evaluation_dataset*.pickle
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
