@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 es_connection = Elasticsearch("http://localhost:9200")
 
+
 def review_id_to_index(review_id):
     return f"review_{review_id}_index"
 
@@ -420,7 +421,7 @@ def ask_agent(request, conversation_id: int):
 
     logger.info(f"Id: {review_id}")
     logger.info(f"Index name: {index_name}")
-    
+
     elastic_vector_search = ElasticsearchStore(
         es_connection=es_connection,
         index_name=index_name,

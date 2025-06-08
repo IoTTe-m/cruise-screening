@@ -8,11 +8,11 @@ from django import forms
 from organisations.models import Organisation
 from .models import LiteratureReview, LiteratureReviewMember
 from document_search.models import SearchEngine
-from document_search.search_core import search_core # noqa
-from document_search.search_cruise import search_cruise # noqa
-from document_search.search_google_scholar import search_google_scholar # noqa
-from document_search.search_semantic_scholar import search_semantic_scholar # noqa
-from document_search.search_pubmed import search_pubmed # noqa
+from document_search.search_core import search_core  # noqa
+from document_search.search_cruise import search_cruise  # noqa
+from document_search.search_google_scholar import search_google_scholar  # noqa
+from document_search.search_semantic_scholar import search_semantic_scholar  # noqa
+from document_search.search_pubmed import search_pubmed  # noqa
 from django.contrib.postgres.forms import (
     SimpleArrayField,
     ValidationError,
