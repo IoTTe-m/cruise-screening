@@ -1,4 +1,4 @@
-import inspect
+import inspect # noqa
 import json
 import time
 from typing import Optional, Dict, Any
@@ -12,7 +12,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 import datetime
 
-from document_classification.registry import MLRegistry
+from document_classification.registry import MLRegistry # noqa
 from document_classification.views import (
     predict_papers,
     prediction_reason,
